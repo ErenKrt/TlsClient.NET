@@ -9,11 +9,14 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Description>Addon of TlsClient for HttpClient.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+	<PackageLicenseFile>LICENSE</PackageLicenseFile>
+	  
   </PropertyGroup>
 
 
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+	<None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
