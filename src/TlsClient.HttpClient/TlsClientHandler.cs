@@ -76,7 +76,7 @@ namespace TlsClient.HttpClient
                 RequestMessage = request,
             };
 
-            if (!string.IsNullOrWhiteSpace(response.Body) && response.IsSuccessStatus)
+            if (!string.IsNullOrWhiteSpace(response.Body))
             {
                 var parsed = response.Body.ToParsedBase64();
                 if(!string.IsNullOrEmpty(parsed.Item1) && !string.IsNullOrEmpty(parsed.Item2))
