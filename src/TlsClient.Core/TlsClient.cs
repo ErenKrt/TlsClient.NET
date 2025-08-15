@@ -49,7 +49,7 @@ namespace TlsClient.Core
             request.WithDefaultCookieJar ??= Options.WithDefaultCookieJar;
             request.WithoutCookieJar ??= Options.WithoutCookieJar;
             request.CustomTlsClient ??= Options.CustomTlsClient;
-
+           
             if(request.CustomTlsClient != null) // If CustomTlsClient is not null, TlsClientIdentifier should be null
             {
                 request.TlsClientIdentifier = default!;
@@ -67,6 +67,9 @@ namespace TlsClient.Core
                     request.Headers.Add(header.Key, header.Value[0]);
                 }
             }
+
+            // Override if has Host header
+            request.RequestHostOverride ??= request.Headers.ContainsKey("Host") ? request.Headers["Host"] : null;
 
             Response response;
 

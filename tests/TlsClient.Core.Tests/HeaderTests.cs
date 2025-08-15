@@ -4,6 +4,7 @@ using System.Net;
 using TlsClient.Core.Models;
 using TlsClient.Core.Models.Entities;
 using TlsClient.Core.Models.Requests;
+using TlsClient.Core.Models.Responses;
 
 namespace TlsClient.Tests
 {
@@ -93,9 +94,23 @@ namespace TlsClient.Tests
         }
 
         [Fact] 
-        public async Task ShouldUseServerNameOverwrite()
+        public async Task ShouldOverrideHost()
         {
 
+            var tlsClient = new Core.TlsClient(new TlsClientOptions()
+            {
+                LibraryPath= "D:\\Tools\\TlsClient\\tls-client-windows-64-1.10.0.dll",
+                InsecureSkipVerify= true
+            });
+            tlsClient.DefaultHeaders.Add("Host", new List<string>() { "example.com" });
+           
+            var response = await tlsClient.RequestAsync(new Request()
+            {
+                RequestUrl = "https://52.202.31.94/get",
+                RequestMethod = HttpMethod.Get,
+            });
+            response.Status.Should().Be(HttpStatusCode.OK);
+            response.Body.Should().Contain("example.com");
         }
     }
 }
