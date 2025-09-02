@@ -18,9 +18,9 @@ Fill in your environment details:
 
 - **OS:** (e.g., Ubuntu 22.04, bare-metal or containerized)  
 - **.NET:** (e.g., 9.0)  
+- **Tls-Client:** (e.g., 1.11.0)  
 - **TlsClient.NET:** (e.g., 0.2.2)  
 - **libc / glibc:** (e.g., default from Ubuntu 22.04)  
-- **Architecture:** (e.g., x64, arm64)  
 
 ---
 
