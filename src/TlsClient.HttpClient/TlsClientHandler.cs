@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Net;
 using TlsClient.HttpClient.Helpers;
 using System.Net.Http.Headers;
+using TlsClient.Core.Helpers.Extensions;
 
 namespace TlsClient.HttpClient
 {
@@ -20,8 +21,12 @@ namespace TlsClient.HttpClient
         public TlsClientHandler(Core.TlsClient client)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
+            if (_client.Options.WithoutCookieJar)
+            {
+                this.UseCookies = false;
+            }
         }
-
+   
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var tlsRequestBuilder = new RequestBuilder()
@@ -40,7 +45,7 @@ namespace TlsClient.HttpClient
                     tlsRequestBuilder.WithHeader("Content-Type", contentType.ToString());
                 }
             }
-
+            
             // Add headers
             foreach (var header in request.GetHeaderDictionary())
             {
@@ -56,14 +61,10 @@ namespace TlsClient.HttpClient
             }
 
             var tlsRequest= tlsRequestBuilder.Build();
-            var response = await _client.RequestAsync(tlsRequest, cancellationToken);
-
-            // Validate response
-            if (response == null)
-            {
-                throw new Exception("Response was returned null from Native Tls Client");
-            }
-
+            var response = await _client.RequestAsync(tlsRequest, cancellationToken) ?? throw new Exception("Response was returned null from Native Tls Client");
+            
+            
+            
             if (response.Status == 0 && !response.Body.Contains("Timeout"))
             {
                 throw new Exception(response.Body);

@@ -1,6 +1,7 @@
 ﻿using RestSharp;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 using TlsClient.Core.Models.Entities;
 using TlsClient.HttpClient;
@@ -9,69 +10,57 @@ namespace TlsClient.RestSharp.Helpers.Builders
 {
     public class TlsRestClientBuilder
     {
-        private Core.TlsClient _tlsClient { get; set; }
-        private bool _isUseCookieContainer { get; set; } = false;
-        private Uri _baseUrl { get; set; }
-        private Action<RestClientOptions> _configureRestClient { get; set; }
+        private Core.TlsClient? _tlsClient;
+        private Uri? _baseUrl;
+        private Action<RestClientOptions>? _configureRestClient;
+
         public TlsRestClientBuilder WithTlsClient(Core.TlsClient tlsClient)
         {
-            _tlsClient = tlsClient;
+            _tlsClient = tlsClient ?? throw new ArgumentNullException(nameof(tlsClient));
             return this;
         }
 
         public TlsRestClientBuilder WithBaseUrl(string baseUrl)
         {
-            if (string.IsNullOrEmpty(baseUrl))
-            {
-                throw new ArgumentNullException(nameof(baseUrl), "Base URL cannot be null or empty");
-            }
-            _baseUrl = new Uri(baseUrl);
-            return this;
-        }
-        public TlsRestClientBuilder WithCookieContainer(bool useCookieContainer)
-        {
-            _isUseCookieContainer = useCookieContainer;
+            if (string.IsNullOrWhiteSpace(baseUrl))
+                throw new ArgumentException("Base URL cannot be null or empty", nameof(baseUrl));
+
+            _baseUrl = new Uri(baseUrl, UriKind.Absolute);
             return this;
         }
 
         public TlsRestClientBuilder WithConfigureRestClient(Action<RestClientOptions> configureRestClient)
         {
-            _configureRestClient = configureRestClient;
+            _configureRestClient = configureRestClient ?? throw new ArgumentNullException(nameof(configureRestClient));
             return this;
         }
 
         public RestClient Build()
         {
-            if(_tlsClient == null)
-            {
-                throw new ArgumentNullException(nameof(_tlsClient), "TlsClient cannot be null");
-            }
+            if (_tlsClient is null)
+                throw new InvalidOperationException("TlsClient must be provided before building.");
 
-            var _tlsHandler = new TlsClientHandler(_tlsClient);
+            if (_baseUrl is null)
+                throw new InvalidOperationException("BaseUrl must be provided before building.");
 
-            var client = new RestClient(handler:_tlsHandler, configureRestClient: (options) =>
-            {
-                options.BaseUrl = _baseUrl;
-                options.UserAgent = _tlsClient.Options.UserAgent;
-                options.Timeout = _tlsClient.Options.Timeout;
-                options.FollowRedirects = _tlsClient.Options.FollowRedirects;
+            var tlsHandler = new TlsClientHandler(_tlsClient);
 
-                if (_tlsClient.Options.InsecureSkipVerify)
+            return new RestClient(
+                handler: tlsHandler,
+                configureRestClient: options =>
                 {
-                    options.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
-                }
-                if (_isUseCookieContainer)
-                {
-                    options.CookieContainer = new System.Net.CookieContainer();
-                }
+                    options.BaseUrl = _baseUrl;
+                    options.UserAgent = _tlsClient.Options.UserAgent;
+                    options.FollowRedirects = _tlsClient.Options.FollowRedirects;
 
-                if (_configureRestClient != null)
-                {
-                    _configureRestClient(options);
-                }
-            });
+                    if (_tlsClient.Options.InsecureSkipVerify)
+                        options.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
 
-            return client;
+                    if (_tlsClient.Options.WithoutCookieJar)
+                        options.CookieContainer = null;
+
+                    _configureRestClient?.Invoke(options);
+                });
         }
     }
 }

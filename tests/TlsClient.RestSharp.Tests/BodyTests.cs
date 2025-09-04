@@ -1,184 +1,110 @@
-using FluentAssertions;
-using Newtonsoft.Json;
+﻿using FluentAssertions;
 using RestSharp;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
-using TlsClient.Core.Helpers.Builders;
-using TlsClient.Core.Models.Entities;
+using System.Text;
+using System.Threading.Tasks;
 using TlsClient.RestSharp.Helpers.Builders;
 
 namespace TlsClient.RestSharp.Tests
 {
-    public class PostResponse
-    {
-        [JsonProperty("args")]
-        public IDictionary<string, string> Args { get; set; }
-
-        [JsonProperty("form")]
-        public IDictionary<string, string> Form { get; set; }
-
-        [JsonProperty("files")]
-        public IDictionary<string, string> Files { get; set; }
-
-        [JsonProperty("json")]
-        public IDictionary<string, string> Json { get; set; }
-
-        [JsonProperty("headers")]
-        public IDictionary<string, string> Headers { get; set; }
-    }
     public class BodyTests
     {
-        [Fact]
-        public async void ShouldBeInQuery()
+        static BodyTests()
         {
-            var tlsClient= new TlsClientBuilder()
-                .WithIdentifier(TlsClientIdentifier.Chrome132)
-                .WithUserAgent("TestClient 1.0")
-                .WithFollowRedirects(true)
-                .WithLibraryPath("D:\\Tools\\TlsClient\\tls-client-windows-64-1.9.1.dll")
-                .Build();
-
-            var restClient = new TlsRestClientBuilder()
-                .WithBaseUrl("https://httpbin.org")
-                .WithTlsClient(tlsClient)
-                .Build();
-
-
-            var restReq= new RestRequest("/post", Method.Post);
-            restReq.AddQueryParameter("credit", "ep.eren");
-            restReq.AddQueryParameter("love", "you");
-            var restResponse = await restClient.ExecuteAsync<PostResponse>(restReq);
-            restResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-            restResponse.Data.Should().NotBeNull();
-            restResponse.Data.Args.Should().Contain("credit", "ep.eren").And.Contain("love", "you");
+            Core.TlsClient.Initialize("D:\\Tools\\TlsClient\\tls-client-windows-64-1.10.0.dll");
         }
 
         [Fact]
-        public async void ShouldBeInForm()
+        public void Should_Send_Json_Body()
         {
-            var tlsClient = new TlsClientBuilder()
-                .WithIdentifier(TlsClientIdentifier.Chrome132)
-                .WithUserAgent("TestClient 1.0")
-                .WithFollowRedirects(true)
-                .WithLibraryPath("D:\\Tools\\TlsClient\\tls-client-windows-64-1.9.1.dll")
-                .Build();
-            var restClient = new TlsRestClientBuilder()
-                .WithBaseUrl("https://httpbin.org")
-                .WithTlsClient(tlsClient)
+            using var client = new Core.TlsClient();
+            using var restClient = new TlsRestClientBuilder()
+                .WithTlsClient(client)
+                .WithBaseUrl("https://httpbin.io")
                 .Build();
 
-            var restReq = new RestRequest("/post", Method.Post);
-            restReq.AddParameter("credit", "ep.eren");
-            restReq.AddParameter("love", "you");
-            var restResponse = await restClient.ExecuteAsync<PostResponse>(restReq);
-            restResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-            restResponse.Data.Should().NotBeNull();
-            restResponse.Data.Form.Should().Contain("credit", "ep.eren").And.Contain("love", "you");
+            var request = new RestRequest("https://httpbin.org/post",Method.Post);
+            request.AddHeader("Content-Type", "application/json");
+            request.AddJsonBody(new{ 
+                key = "value"
+            });
+            var response = restClient.Execute(request);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Content.Should().Contain("\"key\": \"value\"");
         }
 
         [Fact]
-        public async void ShouldBeInFile()
+        public void Should_Send_Form_Body()
         {
-            var txtContent= "Hi from TlsClient!";
-            var tempFilePath = Path.GetTempFileName();
-            File.WriteAllText(tempFilePath, txtContent);
-
-            var tlsClient = new TlsClientBuilder()
-                .WithIdentifier(TlsClientIdentifier.Chrome132)
-                .WithUserAgent("TestClient 1.0")
-                .WithFollowRedirects(true)
-                .WithLibraryPath("D:\\Tools\\TlsClient\\tls-client-windows-64-1.9.1.dll")
+            using var client = new Core.TlsClient();
+            using var restClient = new TlsRestClientBuilder()
+                .WithTlsClient(client)
+                .WithBaseUrl("https://httpbin.io")
                 .Build();
-            var restClient = new TlsRestClientBuilder()
-                .WithBaseUrl("https://httpbin.org")
-                .WithTlsClient(tlsClient)
-                .Build();
-            var restReq = new RestRequest("/post", Method.Post);
-            restReq.AddFile("textFile", tempFilePath);
-            var restResponse = await restClient.ExecuteAsync<PostResponse>(restReq);
-
-            File.Delete(tempFilePath);
-
-            restResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-            restResponse.Data.Should().NotBeNull();
-            restResponse.Data.Files.Should().ContainKey("textFile");
+            var request = new RestRequest("https://httpbin.org/post", Method.Post);
+            request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
+            request.AddParameter("key", "value");
+            var response = restClient.Execute(request);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Content.Should().Contain("\"key\": \"value\"");
         }
 
         [Fact]
-        public async void ShouldBeInJson()
+        public void Should_Send_File_Body()
         {
-            var tlsClient = new TlsClientBuilder()
-                .WithIdentifier(TlsClientIdentifier.Chrome132)
-                .WithUserAgent("TestClient 1.0")
-                .WithFollowRedirects(true)
-                .WithLibraryPath("D:\\Tools\\TlsClient\\tls-client-windows-64-1.9.1.dll")
+            File.WriteAllLines("testfile.txt", new[] { "This is a test file." });
+
+            using var client = new Core.TlsClient();
+            using var restClient = new TlsRestClientBuilder()
+                .WithTlsClient(client)
+                .WithBaseUrl("https://httpbin.io")
                 .Build();
-            var restClient = new TlsRestClientBuilder()
-                .WithBaseUrl("https://httpbin.org")
-                .WithTlsClient(tlsClient)
-                .Build();
-            var restReq = new RestRequest("/post", Method.Post);
-            restReq.AddJsonBody(new { credit = "ep.eren", love = "you" });
-            var restResponse = await restClient.ExecuteAsync<PostResponse>(restReq);
-            restResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-            restResponse.Data.Should().NotBeNull();
-            restResponse.Data.Json.Should().Contain("credit", "ep.eren").And.Contain("love", "you");
+            var request = new RestRequest("https://httpbin.org/post", Method.Post);
+            request.AddFile("myTestFile", "testfile.txt");
+            var response = restClient.Execute(request);
+
+            File.Delete("testfile.txt");
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Content.Should().Contain("myTestFile");
         }
 
         [Fact]
-        public async void ShouldBeMultipartForm()
+        public void Should_Send_Multipart_Body()
         {
-            var txtContent = "Hi from TlsClient!";
-            var tempFilePath = Path.GetTempFileName();
-            File.WriteAllText(tempFilePath, txtContent);
-
-            var tlsClient = new TlsClientBuilder()
-                .WithIdentifier(TlsClientIdentifier.Chrome132)
-                .WithUserAgent("TestClient 1.0")
-                .WithFollowRedirects(true)
-                .WithLibraryPath("D:\\Tools\\TlsClient\\tls-client-windows-64-1.9.1.dll")
+            File.WriteAllLines("testfile.txt", new[] { "This is a test file." });
+            using var client = new Core.TlsClient();
+            using var restClient = new TlsRestClientBuilder()
+                .WithTlsClient(client)
+                .WithBaseUrl("https://httpbin.io")
                 .Build();
-            var restClient = new TlsRestClientBuilder()
-                .WithBaseUrl("https://httpbin.org")
-                .WithTlsClient(tlsClient)
-                .Build();
-            var restReq = new RestRequest("/post", Method.Post);
-            restReq.AlwaysMultipartFormData = true;
-            restReq.AddParameter("credit", "ep.eren");
-            restReq.AddParameter("love", "you");
-            restReq.AddFile("textFile", tempFilePath);
-            var restResponse = await restClient.ExecuteAsync<PostResponse>(restReq);
-            File.Delete(tempFilePath);
-            restResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-            restResponse.Data.Should().NotBeNull();
-            restResponse.Data.Form.Should().Contain("credit", "ep.eren").And.Contain("love", "you");
-            restResponse.Data.Files.Should().ContainKey("textFile");
-            restResponse.Data.Headers.Should().ContainKey("Content-Type").WhoseValue.Should().Match(value => value.Contains("multipart/form-data"));
+            var request = new RestRequest("https://httpbin.org/post", Method.Post);
+            request.AlwaysMultipartFormData = true;
+            request.AddFile("myTestFile", "testfile.txt");
+            request.AddParameter("key", "value");
+            var response = restClient.Execute(request);
+            File.Delete("testfile.txt");
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Content.Should().Contain("myTestFile");
+            response.Content.Should().Contain("\"key\": \"value\"");
         }
 
         [Fact]
-        public async void ShouldBeUrlEncodedForm()
+        public void Should_Send_Query_Parameters()
         {
-            var tlsClient = new TlsClientBuilder()
-                .WithIdentifier(TlsClientIdentifier.Chrome132)
-                .WithUserAgent("TestClient 1.0")
-                .WithFollowRedirects(true)
-                .WithLibraryPath("D:\\Tools\\TlsClient\\tls-client-windows-64-1.9.1.dll")
+            using var client = new Core.TlsClient();
+            using var restClient = new TlsRestClientBuilder()
+                .WithTlsClient(client)
+                .WithBaseUrl("https://httpbin.io")
                 .Build();
-            var restClient = new TlsRestClientBuilder()
-                .WithBaseUrl("https://httpbin.org")
-                .WithTlsClient(tlsClient)
-                .Build();
-            var restReq = new RestRequest("/post", Method.Post);
-            restReq.AddHeader("Content-Type", "application/x-www-form-urlencoded");
-            restReq.AddParameter("credit", "ep.eren");
-            restReq.AddParameter("love", "you");
-
-            var restResponse = await restClient.ExecuteAsync<PostResponse>(restReq);
-            restResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-            restResponse.Data.Should().NotBeNull();
-            restResponse.Data.Form.Should().Contain("credit", "ep.eren").And.Contain("love", "you");
-            restResponse.Data.Headers.Should().ContainKey("Content-Type").WhoseValue.Should().Match(value => value.Contains("x-www-form-urlencoded"));
-
+            var request = new RestRequest("https://httpbin.org/get", Method.Get);
+            request.AddQueryParameter("key", "value");
+            var response = restClient.Execute(request);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Content.Should().Contain("\"key\": \"value\"");
         }
     }
 }

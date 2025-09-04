@@ -42,7 +42,7 @@ namespace TlsClient.Core.Helpers.Natives
                 {
                     if (line.StartsWith("ID="))
                     {
-                        return line.Substring(3).Trim('"').ToLower();
+                        return line[3..].Trim('"').ToLower();
                     }
                 }
             }
