@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "TlsClient.Examples.Console": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "TLS_CLIENT_PATH": "D:\\\\Tools\\\\TlsClient\\\\tls-client-windows-64-1.10.0.dll"
+      }
+    }
+  }
+}

@@ -1,140 +1,107 @@
-using FluentAssertions;
-using System.Net;
-using TlsClient.Core.Helpers.Builders;
-using TlsClient.Core.Models;
+﻿using System.Net;
 using TlsClient.Core.Models.Entities;
 using TlsClient.Core.Models.Requests;
 
-namespace TlsClient.Tests
+namespace TlsClient.Core.Tests
 {
     public class StatusTests
     {
-        [Fact]
-        public async Task ShouldReturn200()
+        public static readonly string BaseURL = "https://httpbin.io";
+        static StatusTests()
         {
-            var tlsClient = new TlsClientBuilder().Build();
-            var response = await tlsClient.RequestAsync(new Request()
-            {
-                RequestUrl = "https://httpbin.org/get",
-                RequestMethod = HttpMethod.Get,
-            });
-
-            response.IsSuccessStatus.Should().BeTrue();
+            TlsClient.Initialize("D:\\Tools\\TlsClient\\tls-client-windows-64-1.10.0.dll");
         }
 
         [Fact]
-        public async Task ShouldReturn400()
+        public void Should_Return_200()
         {
-            var tlsClient = new Core.TlsClient();
-            var response = await tlsClient.RequestAsync(new Request()
-            {
-                RequestUrl = "https://httpbin.org/status/400",
-                RequestMethod = HttpMethod.Get,
-            });
-            response.Status.Should().Be(HttpStatusCode.BadRequest);
-        }
+            using var client = new TlsClient();
 
-        [Fact]
-        public async Task ShouldFollowRedirect_WithOptions()
-        {
-            var tlsClient= new TlsClientBuilder()
-                .WithIdentifier(TlsClientIdentifier.Chrome132)
-                .WithUserAgent("TestClient 1.0")
-                .WithFollowRedirects(true)
-                .Build();
-           
-            var targetUrl = "https://httpbin.org/get";
-
-
-            var response = await tlsClient.RequestAsync(new Request()
+            var request = new Request()
             {
-                RequestUrl = $"https://httpbin.org/redirect-to?url={WebUtility.UrlEncode(targetUrl)}",
-                RequestMethod = HttpMethod.Get,
-            });
-
-            response.Status.Should().Be(HttpStatusCode.OK);
-            response.Target.Should().Be(targetUrl);
-        }
-
-        [Fact]
-        public async Task ShouldNotFollowRedirect_WithOptions()
-        {
-            var tlsClient = new Core.TlsClient(new TlsClientOptions(TlsClientIdentifier.Chrome132, "TestClient 1.0")
-            {
-                FollowRedirects = false,
-            });
-            var targetUrl = "https://httpbin.org/get";
-            var response = await tlsClient.RequestAsync(new Request()
-            {
-                RequestUrl = $"https://httpbin.org/redirect-to?url={WebUtility.UrlEncode(targetUrl)}",
-                RequestMethod = HttpMethod.Get,
-            });
-            response.Status.Should().Be(HttpStatusCode.Found);
-            response.Target.Should().NotBe(targetUrl);
-        }
-
-        [Fact]
-        public async Task ShouldFollowRedirect()
-        {
-            var tlsClient = new Core.TlsClient();
-            var targetUrl = "https://httpbin.org/get";
-            var response = await tlsClient.RequestAsync(new Request()
-            {
-                RequestUrl = "https://httpbin.org/get",
-                RequestMethod = HttpMethod.Get,
-                FollowRedirects = true,
-            });
-            response.Status.Should().Be(HttpStatusCode.OK);
-            response.Target.Should().Be(targetUrl);
-        }
-
-        [Fact]
-        public async Task ShouldNotFollowRedirect()
-        {
-            var tlsClient = new Core.TlsClient();
-            var targetUrl = "https://httpbin.org/get";
-            var response = await tlsClient.RequestAsync(new Request()
-            {
-                RequestUrl = $"https://httpbin.org/redirect-to?url={WebUtility.UrlEncode(targetUrl)}",
-                RequestMethod = HttpMethod.Get,
-                FollowRedirects = false,
-            });
-            response.Status.Should().Be(HttpStatusCode.Found);
-            response.Target.Should().NotBe(targetUrl);
-        }
-
-        [Fact]
-        public async Task ShouldTimeout()
-        {
-            var tlsClient = new Core.TlsClient(new TlsClientOptions(TlsClientIdentifier.Chrome132, "TestClient 1.0")
-            {
-                Timeout = TimeSpan.FromSeconds(1),
-            });
-            var request = new Request
-            {
-                RequestUrl = "https://httpbin.org/delay/5",
-                RequestMethod = HttpMethod.Get
+                RequestUrl = BaseURL+"/status/200"
             };
-            var response = await tlsClient.RequestAsync(request);
-            response.Status.Should().Be(0);
-            response.Body.Should().Contain("Timeout");
+            var response = client.Request(request);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
         }
 
         [Fact]
-        public async Task ShouldNotTimeout()
+        public void Should_Return_500()
         {
-            var tlsClient = new Core.TlsClient(new TlsClientOptions(TlsClientIdentifier.Chrome132, "TestClient 1.0")
+            using var client = new TlsClient();
+
+            var request = new Request()
             {
-                Timeout = TimeSpan.FromSeconds(10),
-            });
-            var request = new Request
-            {
-                RequestUrl = "https://httpbin.org/delay/5",
-                RequestMethod = HttpMethod.Get
+                RequestUrl = BaseURL+"/status/500",
+                RequestMethod= HttpMethod.Post
             };
-            var response = await tlsClient.RequestAsync(request);
-            response.Status.Should().Be(HttpStatusCode.OK);
-            response.IsSuccessStatus.Should().BeTrue();
+            var response = client.Request(request);
+            Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         }
+
+        [Fact]
+        public void Should_Follow_Redirect()
+        {
+            using var client = new TlsClient(new TlsClientOptions()
+            {
+                TlsClientIdentifier= TlsClientIdentifier.Chrome133,
+                FollowRedirects= true
+            });
+            var request = new Request()
+            {
+                RequestUrl = BaseURL + "/redirect/1",
+            };
+            var response = client.Request(request);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
+        }
+
+        [Fact]
+        public void Should_Not_Follow_Redirect()
+        {
+            using var client = new TlsClient(new TlsClientOptions()
+            {
+                TlsClientIdentifier = TlsClientIdentifier.Chrome133,
+                FollowRedirects = false
+            });
+            var request = new Request()
+            {
+                RequestUrl = BaseURL + "/redirect/1",
+            };
+            var response = client.Request(request);
+            Assert.Equal(HttpStatusCode.Found, response.Status);
+        }
+
+        [Fact]
+        public void Should_Timeout()
+        {
+            using var client = new TlsClient(new TlsClientOptions()
+            {
+                TlsClientIdentifier = TlsClientIdentifier.Chrome133,
+                Timeout= TimeSpan.FromSeconds(5)
+            });
+            var request = new Request()
+            {
+                RequestUrl = BaseURL + "/delay/8",
+            };
+            var response = client.Request(request);
+            Assert.Equal(HttpStatusCode.RequestTimeout, response.Status);
+        }
+
+        [Fact]
+        public void Should_Not_Timeout()
+        {
+            using var client = new TlsClient(new TlsClientOptions()
+            {
+                TlsClientIdentifier = TlsClientIdentifier.Chrome133,
+                Timeout = TimeSpan.FromSeconds(10)
+            });
+            var request = new Request()
+            {
+                RequestUrl = BaseURL + "/delay/5",
+            };
+            var response = client.Request(request);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
+        }
+
     }
 }

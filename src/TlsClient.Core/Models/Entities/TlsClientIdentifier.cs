@@ -1,7 +1,4 @@
-﻿using Newtonsoft.Json;
-
-
-namespace TlsClient.Core.Models.Entities
+﻿namespace TlsClient.Core.Models.Entities
 {
     // Reference: https://github.com/bogdanfinn/tls-client/blob/master/profiles/profiles.go
     public sealed class TlsClientIdentifier

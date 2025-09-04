@@ -1,88 +1,172 @@
-using FluentAssertions;
-using Newtonsoft.Json.Linq;
+﻿using FluentAssertions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
+using System.Text;
+using System.Threading.Tasks;
 using TlsClient.Core.Models.Entities;
 using TlsClient.Core.Models.Requests;
 
-namespace TlsClient.Tests
+namespace TlsClient.Core.Tests
 {
     public class CookieTests
     {
+        public static readonly string BaseURL = "https://httpbin.io";
+
+        static CookieTests()
+        {
+            TlsClient.Initialize("D:\\Tools\\TlsClient\\tls-client-windows-64-1.10.0.dll");
+        }
 
         [Fact]
-        public async Task ShouldSendRequestCookies()
+        public void Should_Include_Cookie()
         {
-            var tlsClient = new Core.TlsClient();
-            var response = await tlsClient.RequestAsync(new Request()
+            using var tlsClient = new TlsClient();
+
+            var request = new Request()
             {
-                RequestUrl = "https://httpbin.org/cookies",
-                RequestMethod = HttpMethod.Get,
-                RequestCookies= new List<TlsClientCookie>()
+                RequestUrl = BaseURL + "/cookies",
+                RequestCookies = new List<TlsClientCookie>
                 {
-                    new TlsClientCookie("TestCookie", "CookieValue123")
-                },  
-            });
+                    new TlsClientCookie("sessionid", "123456")
+                }
+            };
+            var response = tlsClient.Request(request);
             response.Status.Should().Be(HttpStatusCode.OK);
-            response.Body.Should().Contain("\"TestCookie\": \"CookieValue123\"");
+            response.Body.Should().Contain("sessionid");
         }
 
         [Fact]
-        public async Task ShouldCaptureSetCookieFromResponse()
+        public void Should_Keep_Cookie()
         {
-            var tlsClient = new Core.TlsClient();
-            var response = await tlsClient.RequestAsync(new Request()
+            using var tlsClient = new TlsClient(new TlsClientOptions(TlsClientIdentifier.Chrome133, "TlsClient.NET 1.0")
             {
-                RequestUrl = "https://httpbin.org/cookies/set?MyCookie=MyValue",
-                RequestMethod = HttpMethod.Get,
                 WithDefaultCookieJar = true
             });
-            response.Status.Should().Be(HttpStatusCode.Found);
-            response.Cookies["MyCookie"].Should().Be("MyValue");
+            var request = new Request()
+            {
+                RequestUrl = BaseURL + "/cookies/set?sessionid=123456",
+            };
+            var response = tlsClient.Request(request);
+
+            var secondRequest = new Request()
+            {
+                RequestUrl = BaseURL + "/cookies",
+            };
+
+            var secondResponse = tlsClient.Request(secondRequest);
+            secondResponse.Status.Should().Be(HttpStatusCode.OK);
+            secondResponse.Body.Should().Contain("sessionid");
         }
 
         [Fact]
-        public async Task ShouldPersistCookiesAcrossRequests()
+        public void Should_Not_Keep_Cookie_By_Request()
         {
-            var tlsClient = new Core.TlsClient();
-            var setCookieResponse = await tlsClient.RequestAsync(new Request()
+            using var tlsClient = new TlsClient();
+            var request = new Request()
             {
-                RequestUrl = "https://httpbin.org/cookies/set/TestSession/Session123",
-                RequestMethod = HttpMethod.Get,
-                WithDefaultCookieJar = true
-            });
-
-            setCookieResponse.Status.Should().Be(HttpStatusCode.Found);
-
-            var getCookieResponse = await tlsClient.RequestAsync(new Request()
+                RequestUrl = BaseURL + "/cookies/set?sessionid=123456",
+                WithoutCookieJar = true
+            };
+            var response = tlsClient.Request(request);
+            var secondRequest = new Request()
             {
-                RequestUrl = "https://httpbin.org/cookies",
-                RequestMethod = HttpMethod.Get,
-                WithDefaultCookieJar = true
-            });
-
-            getCookieResponse.Status.Should().Be(HttpStatusCode.OK);
-            getCookieResponse.Body.Should().Contain("\"TestSession\": \"Session123\"");
+                RequestUrl = BaseURL + "/cookies",
+                WithoutCookieJar = true
+            };
+            var secondResponse = tlsClient.Request(secondRequest);
+            secondResponse.Status.Should().Be(HttpStatusCode.OK);
+            secondResponse.Body.Should().NotContain("sessionid");
         }
 
         [Fact]
-        public async Task ShouldSendCookieViaHeader()
+        public void Should_Not_Keep_Cookie_By_Client()
         {
-            var tlsClient = new Core.TlsClient();
-            tlsClient.DefaultHeaders.Add("Cookie", new List<string>() { "HeaderCookie2=FromHeader321" });
-            var response = await tlsClient.RequestAsync(new Request()
+            using var tlsClient = new TlsClient(new TlsClientOptions(TlsClientIdentifier.Chrome133, "TlsClient.NET 1.0")
             {
-                RequestUrl = "https://httpbin.org/cookies",
-                RequestMethod = HttpMethod.Get,
-                Headers = new Dictionary<string, string>
-                {
-                    { "Cookie", "HeaderCookie=FromHeader123" }
-                },
+                WithoutCookieJar = true
             });
+            var request = new Request()
+            {
+                RequestUrl = BaseURL + "/cookies/set?sessionid=123456",
+            };
+            var response = tlsClient.Request(request);
+            var secondRequest = new Request()
+            {
+                RequestUrl = BaseURL + "/cookies",
+            };
+            var secondResponse = tlsClient.Request(secondRequest);
+            secondResponse.Status.Should().Be(HttpStatusCode.OK);
+            secondResponse.Body.Should().NotContain("sessionid");
+        }
 
+        [Fact]
+        public void Should_Include_Cookie_By_Header()
+        {
+            using var tlsClient = new TlsClient();
+            tlsClient.DefaultHeaders.Add("Cookie", new List<string> { "sessionid=123456" });
+
+            var request = new Request()
+            {
+                RequestUrl = BaseURL + "/cookies",
+            };
+            var response = tlsClient.Request(request);
             response.Status.Should().Be(HttpStatusCode.OK);
-            response.Body.Should().Contain("\"HeaderCookie\": \"FromHeader123\"");
+            response.Body.Should().Contain("sessionid");
         }
 
+        [Fact]
+        public void Should_Set_Cookie()
+        {
+            using var tlsClient = new TlsClient(new TlsClientOptions(TlsClientIdentifier.Chrome133, "TlsClient.NET 1.0")
+            {
+                WithDefaultCookieJar = true
+            });
+            // First request for init session
+            var firstRequest = new Request()
+            {
+                RequestUrl = BaseURL + "/cookies",
+            };
+            var firstResponse = tlsClient.Request(firstRequest);
 
+            var addCookiesResponse= tlsClient.AddCookies(BaseURL, new List<TlsClientCookie>()
+            {
+                new TlsClientCookie("sessionid", "123456", "httpbin.io")
+            });
+
+            addCookiesResponse.Cookies.Should().NotBeNull();
+            addCookiesResponse.Cookies.First().Name.Should().Be("sessionid");
+
+            var request = new Request()
+            {
+                RequestUrl = BaseURL + "/cookies",
+            };
+            var response = tlsClient.Request(request);
+            response.Status.Should().Be(HttpStatusCode.OK);
+            response.Body.Should().Contain("sessionid");
+        }
+
+        [Fact]
+        public void Should_Get_Cookie()
+        {
+            using var tlsClient = new TlsClient(new TlsClientOptions(TlsClientIdentifier.Chrome133, "TlsClient.NET 1.0")
+            {
+                WithDefaultCookieJar = true
+            });
+
+            var request = new Request()
+            {
+                RequestUrl = BaseURL + "/cookies/set?sessionid=123456",
+            };
+
+            var response = tlsClient.Request(request);
+
+            var cookiesResponse = tlsClient.GetCookies(BaseURL + "/cookies");
+            cookiesResponse.Should().NotBeNull();
+            cookiesResponse.Cookies.Should().NotBeNull();
+            cookiesResponse.Cookies.First().Name.Should().Be("sessionid");
+
+        }
     }
 }

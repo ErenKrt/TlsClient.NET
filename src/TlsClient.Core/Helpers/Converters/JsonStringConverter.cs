@@ -1,20 +1,35 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 namespace TlsClient.Core.Helpers.Converters
 {
-    public class JsonStringConverter<T> : JsonConverter<T> where T : class
+    public class JsonStringConverter<T> : JsonConverter<T>
     {
-        public override void WriteJson(JsonWriter writer, T? value, JsonSerializer serializer)
+        public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            writer.WriteValue(value?.ToString());
+            var str = reader.GetString() ?? throw new JsonException($"Cannot convert null to {typeof(T)}.");
+
+            if (typeof(T) == typeof(string))
+                return (T)(object)str;
+
+            if (typeof(T).IsEnum)
+                return (T)Enum.Parse(typeof(T), str, ignoreCase: true);
+
+            var ctor = typeof(T).GetConstructor(new[] { typeof(string) });
+            if (ctor != null)
+                return (T)ctor.Invoke(new object[] { str });
+
+            var parseMethod = typeof(T).GetMethod("Parse", new[] { typeof(string) });
+            if (parseMethod != null)
+                return (T)parseMethod.Invoke(null, new object[] { str });
+
+            throw new JsonException($"JsonStringConverter cannot convert to {typeof(T)}.");
         }
 
-        public override T? ReadJson(JsonReader reader, Type objectType, T? existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
         {
-            return this.ReadJson(reader, objectType, existingValue, hasExistingValue, serializer);
+            writer.WriteStringValue(value?.ToString());
         }
     }
 }

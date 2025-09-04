@@ -6,21 +6,22 @@ namespace TlsClient.Core.Models.Entities
 {
     public class TlsClientCookie
     {
-        public long Expires { get; set; }
-        public string Domain { get; set; }
-        public string Name { get; set; }
-        public string Path { get; set; }
-        public string Value { get; set; }
-        public long MaxAge { get; set; }
+        public long? Expires { get; set; } = null;
+        public string? Domain { get; set; } = null;
+        public string? Name { get; set; } = null;
+        public string? Path { get; set; } = null;
+        public string? Value { get; set; } = null;
+        public long? MaxAge { get; set; } = null;
 
+        public TlsClientCookie() { }
         public TlsClientCookie(string name, string value)
         {
             Name = name;
             Value = value;
-            Domain = string.Empty;
-            Path = string.Empty;
-            Expires = 0;
-            MaxAge = 0;
+        }
+        public TlsClientCookie(string name, string value, string domain) : this(name, value)
+        {
+            Domain = domain;
         }
     }
 }

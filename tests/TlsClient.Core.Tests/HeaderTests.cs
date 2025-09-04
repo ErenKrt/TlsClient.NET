@@ -1,116 +1,103 @@
-using FluentAssertions;
-using Newtonsoft.Json.Linq;
-using System.Net;
-using TlsClient.Core.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using TlsClient.Core.Helpers.Wrappers;
 using TlsClient.Core.Models.Entities;
 using TlsClient.Core.Models.Requests;
-using TlsClient.Core.Models.Responses;
 
-namespace TlsClient.Tests
+namespace TlsClient.Core.Tests
 {
     public class HeaderTests
     {
-        [Fact]
-        public async Task ShouldUserAgent()
+        public static readonly string BaseURL = "https://httpbin.io";
+        static HeaderTests()
         {
-            var tlsClient = new Core.TlsClient(new TlsClientOptions(TlsClientIdentifier.Chrome132, "TestClient 1.0")
-            {
-                LibraryPath= "C:\\Users\\Eren\\Documents\\GitHub\\TlsClient\\examples\\TlsClient.Examples.Console\\bin\\x64\\Debug\\net8.0\\win-x64\\runtimes\\tls-client\\win\\x64\\tls-client.dll"
-            });
-            var response = await tlsClient.RequestAsync(new Request()
-            {
-                RequestUrl = "https://httpbin.org/user-agent",
-                RequestMethod = HttpMethod.Get,
-            });
-            response.Status.Should().Be(HttpStatusCode.OK);
-            response.Body.Should().Contain("TestClient 1.0");
+            TlsClient.Initialize("D:\\Tools\\TlsClient\\tls-client-windows-64-1.10.0.dll");
         }
 
         [Fact]
-        public async Task ShouldIncludeAuthorizationHeader()
+        public void Should_Add_UserAgent_Header()
         {
-            var tlsClient = new Core.TlsClient();
-            tlsClient.DefaultHeaders.Add("Authorization", new List<string>() { "Bearer my-token" });
-            var response = await tlsClient.RequestAsync(new Request()
+            var userAgent = "TlsClient.NET 1.0";
+            using var tlsClient = new TlsClient(new TlsClientOptions(TlsClientIdentifier.Chrome133, userAgent));
+            var request = new Request()
             {
-                RequestUrl = "https://httpbin.org/headers",
-                RequestMethod = HttpMethod.Get,
-            });
-
-            response.Status.Should().Be(HttpStatusCode.OK);
-            response.Body.Contains($"\"Authorization\": \"my-token\"");
+                RequestUrl = BaseURL + "/get"
+            };
+            var response = tlsClient.Request(request);
+            Assert.Contains(userAgent, response.Body);
         }
 
         [Fact]
-        public async Task ShouldRespectHeaderOrder()
+        public void Should_Add_UserAgent_Header_Options()
         {
-            var tlsClient = new Core.TlsClient();
-            var response = await tlsClient.RequestAsync(new Request()
+            var userAgent = "TlsClient.NET 1.0";
+            var options = new TlsClientOptions()
             {
-                RequestUrl = "https://httpbin.org/headers",
-                RequestMethod = HttpMethod.Get,
-                Headers= new Dictionary<string, string>()
+                TlsClientIdentifier = TlsClientIdentifier.Chrome133,
+                DefaultHeaders = new Dictionary<string, List<string>>()
                 {
-                    { "X-Custom-A", "1" },
-                    { "X-Custom-B", "2" },
-                    { "X-Custom-C", "3" },
-                },
-                HeaderOrder = new List<string>()
-                {
-                    "X-Custom-C",
-                    "X-Custom-B",
-                    "X-Custom-A",
+                    { "User-Agent", new List<string> { userAgent } }
                 }
-            });
-
-            response.Status.Should().Be(HttpStatusCode.OK);
-            response.Body.Should().Contain("\"X-Custom-C\": \"3\"")
-               .And.Contain("\"X-Custom-B\": \"2\"")
-               .And.Contain("\"X-Custom-A\": \"1\"");
+            };
+            using var tlsClient = new TlsClient(options);
+            var request = new Request()
+            {
+                RequestUrl = BaseURL + "/get"
+            };
+            var response = tlsClient.Request(request);
+            Assert.Contains(userAgent, response.Body);
         }
 
         [Fact]
-        public async Task ShouldApplyCycledHeader()
+        public void Should_Add_UserAgent_Header_Default()
         {
-            var tlsClient = new Core.TlsClient();
-            var response = await tlsClient.RequestAsync(new Request()
+            var userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 OPR/117.0.0.0";
+
+            using var tlsClient = new TlsClient();
+            var request = new Request()
             {
-                RequestUrl = "https://httpbin.org/headers",
-                RequestMethod = HttpMethod.Get,
-            });
-
-            response.Body.Should().NotContain("X-Cycled-Token");
-
-            tlsClient.DefaultHeaders["X-Cycled-Token"] = new List<string> { "abc123" };
-
-            var response2 = await tlsClient.RequestAsync(new Request()
-            {
-                RequestUrl = "https://httpbin.org/headers",
-                RequestMethod = HttpMethod.Get,
-            });
-
-            response2.Status.Should().Be(HttpStatusCode.OK);
-            response2.Body.Should().Contain("X-Cycled-Token");
+                RequestUrl = BaseURL + "/get"
+            };
+            var response = tlsClient.Request(request);
+            Assert.Contains(userAgent, response.Body);
         }
 
-        [Fact] 
-        public async Task ShouldOverrideHost()
+        [Fact]
+        public void Should_Add_UserAgent_After_Ctor()
         {
+            var userAgent = "TlsClient.NET 1.0";
 
-            var tlsClient = new Core.TlsClient(new TlsClientOptions()
+            using var tlsClient = new TlsClient();
+            tlsClient.DefaultHeaders.Remove("User-Agent");
+            tlsClient.DefaultHeaders.Add("User-Agent", new List<string> { userAgent });
+            var request = new Request()
             {
-                LibraryPath= "D:\\Tools\\TlsClient\\tls-client-windows-64-1.10.0.dll",
-                InsecureSkipVerify= true
-            });
-            tlsClient.DefaultHeaders.Add("Host", new List<string>() { "example.com" });
-           
-            var response = await tlsClient.RequestAsync(new Request()
+                RequestUrl = BaseURL + "/get"
+            };
+            var response = tlsClient.Request(request);
+            Assert.Contains(userAgent, response.Body);
+        }
+
+        [Fact]
+        public void Should_Override_Host()
+        {
+            var baseHost = "example.com";
+            var realIp = "http://23.220.75.245";
+
+            using var tlsClient = new TlsClient();
+            var request = new Request()
             {
-                RequestUrl = "https://52.202.31.94/get",
-                RequestMethod = HttpMethod.Get,
-            });
-            response.Status.Should().Be(HttpStatusCode.OK);
-            response.Body.Should().Contain("example.com");
+                RequestUrl = realIp,
+                Headers = new Dictionary<string, string>()
+                {
+                    { "Host", baseHost }
+                }
+            };
+            var response = tlsClient.Request(request);
+            Assert.Contains($"Example Domain", response.Body);
         }
     }
 }

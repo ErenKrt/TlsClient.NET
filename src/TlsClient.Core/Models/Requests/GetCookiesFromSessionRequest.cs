@@ -7,6 +7,6 @@ namespace TlsClient.Core.Models.Requests
     public class GetCookiesFromSessionRequest
     {
         public Guid SessionID { get; set; }
-        public string Url { get; set; }
+        public string Url { get; set; } = string.Empty;
     }
 }

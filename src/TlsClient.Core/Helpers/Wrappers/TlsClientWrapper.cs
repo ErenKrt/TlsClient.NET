@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TlsClient.Core.Helpers.Natives;
 
 namespace TlsClient.Core.Helpers.Wrappers
 {
-    public class TlsClientWrapper : IDisposable
+    public static class TlsClientWrapper
     {
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate IntPtr RequestDelegate(byte[] payload);
@@ -26,82 +27,149 @@ namespace TlsClient.Core.Helpers.Wrappers
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate IntPtr DestroyAllDelegate();
 
-        private readonly IntPtr _module;
-        private readonly RequestDelegate _requestDelegate;
-        private readonly FreeMemoryDelegate _freeMemoryDelegate;
-        private readonly GetCookiesFromSessionDelegate _getCookiesFromSessionDelegate;
-        private readonly AddCookiesToSessionDelegate _addCookiesToSessionDelegate;
-        private readonly DestroySessionDelegate _destroySessionDelegate;
-        private readonly DestroyAllDelegate _destroyAllDelegate;
+        private static readonly object _callLock = new object();
+        private static readonly object _initLock = new object();
 
-        public TlsClientWrapper(IntPtr module)
+        private static bool _isInitialized;
+
+        private static IntPtr _module;
+        private static RequestDelegate _requestDelegate = null!;
+        private static FreeMemoryDelegate _freeMemoryDelegate = null!;
+        private static GetCookiesFromSessionDelegate _getCookiesFromSessionDelegate = null!;
+        private static AddCookiesToSessionDelegate _addCookiesToSessionDelegate = null!;
+        private static DestroySessionDelegate _destroySessionDelegate = null!;
+        private static DestroyAllDelegate _destroyAllDelegate = null!;
+
+        public static void Initialize(string? libraryPath = null)
         {
-            _module = module;
-            _requestDelegate = GetDelegate<RequestDelegate>("request");
-            _freeMemoryDelegate = GetDelegate<FreeMemoryDelegate>("freeMemory");
-            _getCookiesFromSessionDelegate = GetDelegate<GetCookiesFromSessionDelegate>("getCookiesFromSession");
-            _addCookiesToSessionDelegate = GetDelegate<AddCookiesToSessionDelegate>("addCookiesToSession");
-            _destroySessionDelegate = GetDelegate<DestroySessionDelegate>("destroySession");
-            _destroyAllDelegate = GetDelegate<DestroyAllDelegate>("destroyAll");
+            lock (_initLock)
+            {
+                if (_isInitialized) return;
+
+                libraryPath ??= NativeLoader.GetLibraryPath();
+
+                _module = NativeLoader.LoadNativeAssembly(libraryPath);
+
+                if (_module == IntPtr.Zero)
+                    throw new DllNotFoundException($"Failed to load native library: {libraryPath}");
+
+                _requestDelegate = GetDelegate<RequestDelegate>("request");
+                _freeMemoryDelegate = GetDelegate<FreeMemoryDelegate>("freeMemory");
+                _getCookiesFromSessionDelegate = GetDelegate<GetCookiesFromSessionDelegate>("getCookiesFromSession");
+                _addCookiesToSessionDelegate = GetDelegate<AddCookiesToSessionDelegate>("addCookiesToSession");
+                _destroySessionDelegate = GetDelegate<DestroySessionDelegate>("destroySession");
+                _destroyAllDelegate = GetDelegate<DestroyAllDelegate>("destroyAll");
+
+
+                _isInitialized = true;
+            }
         }
 
-        private T GetDelegate<T>(string functionName) where T : Delegate
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void EnsureInitialized()
         {
-            IntPtr functionPtr = NativeLoader.GetProcAddress(_module, functionName);
+            if (!_isInitialized)
+                throw new InvalidOperationException("TlsClientStaticWrapper not initialized. Call Initialize(string libraryPath) first.");
+        }
+
+        private static T GetDelegate<T>(string functionName) where T : Delegate
+        {
+            var functionPtr = NativeLoader.GetProcAddress(_module, functionName);
             if (functionPtr == IntPtr.Zero)
-            {
-                throw new Exception($"Failed to get the address of the '{functionName}' function.");
-            }
+                throw new EntryPointNotFoundException($"Failed to get address of native function '{functionName}'.");
+
             return Marshal.GetDelegateForFunctionPointer<T>(functionPtr);
         }
 
-        private async Task<string> ExecuteNativeMethodAsync(Func<IntPtr> nativeMethod, CancellationToken cancellationToken)
+        private static string ExecuteNative(Func<IntPtr> nativeCall)
         {
-            return await Task.Run(() =>
+            lock (_callLock)
             {
-                IntPtr resultPtr = nativeMethod();
-                string result = Marshal.PtrToStringAnsi(resultPtr) ?? throw new InvalidOperationException("Received null pointer from native request.");
-                return result;
-            }, cancellationToken);
+                var ptr = nativeCall();
+                if (ptr == IntPtr.Zero)
+                    throw new InvalidOperationException("Native method returned a null pointer.");
+
+                return Marshal.PtrToStringUTF8(ptr) ?? throw new InvalidOperationException("Failed to convert UTF-8 string from native pointer.");
+            }
         }
 
-        public Task<string> RequestAsync(byte[] payload, CancellationToken cancellationToken = default)
+        public static string Request(byte[] payload)
         {
-            return ExecuteNativeMethodAsync(() => _requestDelegate(payload), cancellationToken);
+            EnsureInitialized();
+            if (payload is null) throw new ArgumentNullException(nameof(payload));
+            return ExecuteNative(() => _requestDelegate(payload));
         }
 
-        public Task FreeMemoryAsync(string sessionID, CancellationToken cancellationToken = default)
+        public static void FreeMemory(string sessionId)
         {
-            return Task.Run(() =>
+            EnsureInitialized();
+            if (string.IsNullOrWhiteSpace(sessionId))
+                throw new ArgumentException("sessionId cannot be null or empty.", nameof(sessionId));
+
+            lock (_callLock)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                _freeMemoryDelegate(sessionID);
-            }, cancellationToken);
+                _freeMemoryDelegate(sessionId);
+            }
         }
 
-        public Task<string> GetCookiesFromSessionAsync(byte[] payload, CancellationToken cancellationToken = default)
+        public static string GetCookiesFromSession(byte[] payload)
         {
-            return ExecuteNativeMethodAsync(() => _getCookiesFromSessionDelegate(payload), cancellationToken);
+            EnsureInitialized();
+            if (payload is null) throw new ArgumentNullException(nameof(payload));
+            return ExecuteNative(() => _getCookiesFromSessionDelegate(payload));
         }
 
-        public Task<string> AddCookiesToSessionAsync(byte[] payload, CancellationToken cancellationToken = default)
+        public static string AddCookiesToSession(byte[] payload)
         {
-            return ExecuteNativeMethodAsync(() => _addCookiesToSessionDelegate(payload), cancellationToken);
+            EnsureInitialized();
+            if (payload is null) throw new ArgumentNullException(nameof(payload));
+            return ExecuteNative(() => _addCookiesToSessionDelegate(payload));
         }
 
-        public Task<string> DestroySessionAsync(byte[] payload, CancellationToken cancellationToken = default)
+        public static string DestroySession(byte[] payload)
         {
-            return ExecuteNativeMethodAsync(() => _destroySessionDelegate(payload), cancellationToken);
+            EnsureInitialized();
+            if (payload is null) throw new ArgumentNullException(nameof(payload));
+            return ExecuteNative(() => _destroySessionDelegate(payload));
         }
 
-        public Task<string> DestroyAllAsync(CancellationToken cancellationToken = default)
+        public static string DestroyAll()
         {
-            return ExecuteNativeMethodAsync(() => _destroyAllDelegate(), cancellationToken);
+            EnsureInitialized();
+            return ExecuteNative(() => _destroyAllDelegate());
+        }
+        public static void Destroy()
+        {
+            lock (_initLock)
+            {
+                if (!_isInitialized)
+                    return;
+
+                //_ = DestroyAll();
+
+                var module = _module;
+                try
+                {
+                    if (module != IntPtr.Zero)
+                    {
+                        NativeLoader.FreeNativeAssembly(module);
+                    }
+                }
+                finally
+                {
+                    _requestDelegate = null!;
+                    _freeMemoryDelegate = null!;
+                    _getCookiesFromSessionDelegate = null!;
+                    _addCookiesToSessionDelegate = null!;
+                    _destroySessionDelegate = null!;
+                    _destroyAllDelegate = null!;
+
+                    _module = IntPtr.Zero;
+
+                    _isInitialized = false;
+                }
+            }
         }
 
-        public void Dispose()
-        {
-            GC.SuppressFinalize(this);
-        }
     }
 }

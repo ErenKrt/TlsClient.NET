@@ -1,8 +1,5 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net.Http;
-using System.Text;
 using TlsClient.Core.Models.Entities;
 using TlsClient.Core.Models.Requests;
 
@@ -54,7 +51,7 @@ namespace TlsClient.Core.Helpers.Builders
 
         public RequestBuilder WithBody(object data)
         {
-            _request.RequestBody = JsonConvert.SerializeObject(data);
+            _request.RequestBody = RequestHelpers.ConvertJson(data);
             return this;
         }
 
@@ -70,9 +67,27 @@ namespace TlsClient.Core.Helpers.Builders
             return this;
         }
 
-        public Request Build()
+        public RequestBuilder WithCookie(string name, string value)
         {
-            return _request;
+            _request.RequestCookies ??= new List<TlsClientCookie>();
+            _request.RequestCookies.Add(new TlsClientCookie(name, value));
+            return this;
         }
+
+
+        public RequestBuilder WithCookies(List<TlsClientCookie> cookies)
+        {
+            _request.RequestCookies ??= new List<TlsClientCookie>();
+            _request.RequestCookies.AddRange(cookies);
+            return this;
+        }
+
+        public RequestBuilder WithStreamOutputPath(string path)
+        {
+            _request.StreamOutputPath = path;
+            return this;
+        }
+
+        public Request Build() => _request;
     }
 }

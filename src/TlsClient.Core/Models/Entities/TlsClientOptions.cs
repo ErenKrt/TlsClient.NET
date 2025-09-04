@@ -9,7 +9,7 @@ namespace TlsClient.Core.Models.Entities
         public CustomTlsClient? CustomTlsClient { get; set; } = null;
         public Dictionary<string, List<string>> DefaultHeaders { get; set; }
         public Guid SessionID { get; set; }
-        public TlsClientIdentifier TlsClientIdentifier { get; set; } = TlsClientIdentifier.Chrome131;
+        public TlsClientIdentifier? TlsClientIdentifier { get; set; } = null;
         public string? ProxyURL { get; set; }
         public bool IsRotatingProxy { get; set; } = false;
         public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(60);
@@ -20,7 +20,12 @@ namespace TlsClient.Core.Models.Entities
         public bool WithDebug { get; set; } = false;
         public bool WithDefaultCookieJar { get; set; } = false;
         public bool WithoutCookieJar { get; set; } = false;
-        public string? LibraryPath { get; set; } = null;
+        public bool CatchPanics { get; set; } = false; 
+        public bool ForceHttp1 { get; set; } = false;
+        public bool WithRandomTLSExtensionOrder { get; set; } = false;
+        public List<string>? HeaderOrder { get; set; } = null;
+        public Dictionary<string, List<string>>? CertificatePinningHosts { get; set; } = null;
+        public Dictionary<string, List<string>>? ConnectHeaders { get; set; } = null;
         public string UserAgent => DefaultHeaders["User-Agent"][0];
 
         public TlsClientOptions(TlsClientIdentifier clientIdentifier, string userAgent) : this()

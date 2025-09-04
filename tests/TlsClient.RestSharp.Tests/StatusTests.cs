@@ -1,98 +1,52 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using RestSharp;
-using RestSharp.Interceptors;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
-using TlsClient.Core.Helpers.Builders;
+using System.Text;
+using System.Threading.Tasks;
 using TlsClient.Core.Models.Entities;
 using TlsClient.RestSharp.Helpers.Builders;
 
 namespace TlsClient.RestSharp.Tests
 {
-    public class TestInterceptor : Interceptor
-    {
-        public override ValueTask AfterRequest(RestResponse response, CancellationToken cancellationToken)
-        {
-            response.Content= "Test Interceptor";
-            return base.AfterRequest(response, cancellationToken);
-        }
-    }
-
     public class StatusTests
     {
-        [Fact]
-        public async void ShouldTimeout()
+        static StatusTests()
         {
-            var tlsClient= new TlsClientBuilder()
-                .WithIdentifier(TlsClientIdentifier.Chrome132)
-                .WithUserAgent("TestClient 1.0")
-                .WithFollowRedirects(true)
-                .WithTimeout(TimeSpan.FromSeconds(1))
-                .WithLibraryPath("D:\\Tools\\TlsClient\\tls-client-windows-64-1.9.1.dll")
-                .Build();
-
-            var restClient = new TlsRestClientBuilder()
-                .WithBaseUrl("https://httpbin.org")
-                .WithTlsClient(tlsClient)
-                .Build();
-
-
-            var restReq= new RestRequest("/delay/5", Method.Get);
-            var restResponse = await restClient.ExecuteAsync(restReq);
-
-            restResponse.StatusCode.Should().Be(0);
-            restResponse.ResponseStatus.Should().Be(ResponseStatus.TimedOut);
+            Core.TlsClient.Initialize("D:\\Tools\\TlsClient\\tls-client-windows-64-1.10.0.dll");
         }
 
         [Fact]
-        public async void ShouldError()
+        public void Should_Timeout()
         {
-            var tlsClient = new TlsClientBuilder()
-                .WithIdentifier(TlsClientIdentifier.Chrome132)
-                .WithUserAgent("TestClient 1.0")
-                .WithFollowRedirects(true)
-                .WithLibraryPath("D:\\Tools\\TlsClient\\tls-client-windows-64-1.9.1.dll")
-                .WithTimeout(TimeSpan.FromSeconds(10))
-                .Build();
-            var restClient = new TlsRestClientBuilder()
-                .WithBaseUrl("https://httpbin234534543.org")
-                .WithTlsClient(tlsClient)
+            using var client = new Core.TlsClient(new TlsClientOptions(TlsClientIdentifier.Chrome133, "TlsClient.NET 1.0")
+            {
+                Timeout = TimeSpan.FromSeconds(5)
+            });
+            using var restClient = new TlsRestClientBuilder()
+                .WithTlsClient(client)
+                .WithBaseUrl("https://httpbin.io")
                 .Build();
 
-            var restReq = new RestRequest("/get", Method.Get);
-            var restResponse = await restClient.ExecuteAsync(restReq);
-
-            restResponse.StatusCode.Should().Be(0);
-            restResponse.ResponseStatus.Should().Be(ResponseStatus.Error);
+            var request = new RestRequest("https://httpbin.org/delay/10");
+            var response = restClient.Execute(request);
+            Assert.Equal(HttpStatusCode.RequestTimeout, response.StatusCode);
         }
 
         [Fact]
-        public async void ShouldInvokeInterceptor()
+        public void Should_Error()
         {
-            var tlsClient = new TlsClientBuilder()
-               .WithIdentifier(TlsClientIdentifier.Chrome132)
-               .WithUserAgent("TestClient 1.0")
-               .WithFollowRedirects(true)
-               .WithTimeout(TimeSpan.FromSeconds(10))
-               .WithLibraryPath("D:\\Tools\\TlsClient\\tls-client-windows-64-1.9.1.dll")
-               .Build();
-
-            var restClient = new TlsRestClientBuilder()
-                .WithBaseUrl("https://httpbin.org")
-                .WithTlsClient(tlsClient)
-                .WithConfigureRestClient((x) =>
-                {
-                    x.Interceptors= new List<Interceptor>()
-                    {
-                        new TestInterceptor()
-                    };
-                })
+            using var client = new Core.TlsClient();
+            using var restClient = new TlsRestClientBuilder()
+                .WithTlsClient(client)
+                .WithBaseUrl("https://httpbin1.io")
                 .Build();
 
-            var restReq = new RestRequest("/get", Method.Get);
-            var restResponse = await restClient.ExecuteAsync(restReq);
-
-            restResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-            restResponse.Content.Should().Contain("Test Interceptor");
+            var request = new RestRequest("/get");
+            var response = restClient.Execute(request);
+            response.StatusCode.Should().Be(0);
         }
     }
 }

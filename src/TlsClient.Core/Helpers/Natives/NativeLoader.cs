@@ -5,9 +5,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using TlsClient.Core.Helpers.Natives;
 
-namespace TlsClient.Core.Helpers
+namespace TlsClient.Core.Helpers.Natives
 {
     public class NativeLoader
     {
@@ -60,13 +59,8 @@ namespace TlsClient.Core.Helpers
             return Path.GetFullPath($"runtimes/tls-client/{platform}/{arch}/tls-client.{Extension}");
         }
 
-        public static IntPtr LoadNativeAssembly(string? libraryPath)
+        public static IntPtr LoadNativeAssembly(string libraryPath)
         {
-            if(string.IsNullOrEmpty(libraryPath))
-            {
-                libraryPath = GetLibraryPath();
-            }
-
             if (!File.Exists(libraryPath))
             {
                 throw new DllNotFoundException($"The native library '{libraryPath}' was not found.");
