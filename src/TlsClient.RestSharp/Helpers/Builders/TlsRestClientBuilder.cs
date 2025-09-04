@@ -56,7 +56,7 @@ namespace TlsClient.RestSharp.Helpers.Builders
                     if (_tlsClient.Options.InsecureSkipVerify)
                         options.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
 
-                    if (!_tlsClient.Options.WithDefaultCookieJar)
+                    if (_tlsClient.Options.WithoutCookieJar)
                         options.CookieContainer = null;
 
                     _configureRestClient?.Invoke(options);
