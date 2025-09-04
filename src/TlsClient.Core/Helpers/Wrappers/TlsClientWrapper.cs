@@ -145,7 +145,7 @@ namespace TlsClient.Core.Helpers.Wrappers
                 if (!_isInitialized)
                     return;
 
-                //_ = DestroyAll();
+                _ = DestroyAll();
 
                 var module = _module;
                 try
