@@ -16,4 +16,4 @@ DotNetEnv.Env.Load();
 TlsClientWrapper.Initialize(DotNetEnv.Env.GetString("TLS_CLIENT_PATH"));
 var tlsClient = new TlsClient.Core.TlsClient();
 
-Console.WriteLine("Hello, Friend !")
+Console.WriteLine("Hello, Friend !");
