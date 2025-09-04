@@ -27,9 +27,6 @@ namespace TlsClient.Core.Helpers.Wrappers
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate IntPtr DestroyAllDelegate();
 
-        private static readonly object _callLock = new object();
-        private static readonly object _initLock = new object();
-
         private static bool _isInitialized;
 
         private static IntPtr _module;
@@ -42,27 +39,24 @@ namespace TlsClient.Core.Helpers.Wrappers
 
         public static void Initialize(string? libraryPath = null)
         {
-            lock (_initLock)
-            {
-                if (_isInitialized) return;
+            if (_isInitialized) return;
 
-                libraryPath ??= NativeLoader.GetLibraryPath();
+            libraryPath ??= NativeLoader.GetLibraryPath();
 
-                _module = NativeLoader.LoadNativeAssembly(libraryPath);
+            _module = NativeLoader.LoadNativeAssembly(libraryPath);
 
-                if (_module == IntPtr.Zero)
-                    throw new DllNotFoundException($"Failed to load native library: {libraryPath}");
+            if (_module == IntPtr.Zero)
+                throw new DllNotFoundException($"Failed to load native library: {libraryPath}");
 
-                _requestDelegate = GetDelegate<RequestDelegate>("request");
-                _freeMemoryDelegate = GetDelegate<FreeMemoryDelegate>("freeMemory");
-                _getCookiesFromSessionDelegate = GetDelegate<GetCookiesFromSessionDelegate>("getCookiesFromSession");
-                _addCookiesToSessionDelegate = GetDelegate<AddCookiesToSessionDelegate>("addCookiesToSession");
-                _destroySessionDelegate = GetDelegate<DestroySessionDelegate>("destroySession");
-                _destroyAllDelegate = GetDelegate<DestroyAllDelegate>("destroyAll");
+            _requestDelegate = GetDelegate<RequestDelegate>("request");
+            _freeMemoryDelegate = GetDelegate<FreeMemoryDelegate>("freeMemory");
+            _getCookiesFromSessionDelegate = GetDelegate<GetCookiesFromSessionDelegate>("getCookiesFromSession");
+            _addCookiesToSessionDelegate = GetDelegate<AddCookiesToSessionDelegate>("addCookiesToSession");
+            _destroySessionDelegate = GetDelegate<DestroySessionDelegate>("destroySession");
+            _destroyAllDelegate = GetDelegate<DestroyAllDelegate>("destroyAll");
 
 
-                _isInitialized = true;
-            }
+            _isInitialized = true;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -83,14 +77,11 @@ namespace TlsClient.Core.Helpers.Wrappers
 
         private static string ExecuteNative(Func<IntPtr> nativeCall)
         {
-            lock (_callLock)
-            {
-                var ptr = nativeCall();
-                if (ptr == IntPtr.Zero)
-                    throw new InvalidOperationException("Native method returned a null pointer.");
+            var ptr = nativeCall();
+            if (ptr == IntPtr.Zero)
+                throw new InvalidOperationException("Native method returned a null pointer.");
 
-                return Marshal.PtrToStringUTF8(ptr) ?? throw new InvalidOperationException("Failed to convert UTF-8 string from native pointer.");
-            }
+            return Marshal.PtrToStringUTF8(ptr) ?? throw new InvalidOperationException("Failed to convert UTF-8 string from native pointer.");
         }
 
         public static string Request(byte[] payload)
@@ -106,10 +97,7 @@ namespace TlsClient.Core.Helpers.Wrappers
             if (string.IsNullOrWhiteSpace(sessionId))
                 throw new ArgumentException("sessionId cannot be null or empty.", nameof(sessionId));
 
-            lock (_callLock)
-            {
-                _freeMemoryDelegate(sessionId);
-            }
+            _freeMemoryDelegate(sessionId);
         }
 
         public static string GetCookiesFromSession(byte[] payload)
@@ -140,34 +128,31 @@ namespace TlsClient.Core.Helpers.Wrappers
         }
         public static void Destroy()
         {
-            lock (_initLock)
+            if (!_isInitialized)
+                return;
+
+            _ = DestroyAll();
+
+            var module = _module;
+            try
             {
-                if (!_isInitialized)
-                    return;
-
-                _ = DestroyAll();
-
-                var module = _module;
-                try
+                if (module != IntPtr.Zero)
                 {
-                    if (module != IntPtr.Zero)
-                    {
-                        NativeLoader.FreeNativeAssembly(module);
-                    }
+                    NativeLoader.FreeNativeAssembly(module);
                 }
-                finally
-                {
-                    _requestDelegate = null!;
-                    _freeMemoryDelegate = null!;
-                    _getCookiesFromSessionDelegate = null!;
-                    _addCookiesToSessionDelegate = null!;
-                    _destroySessionDelegate = null!;
-                    _destroyAllDelegate = null!;
+            }
+            finally
+            {
+                _requestDelegate = null!;
+                _freeMemoryDelegate = null!;
+                _getCookiesFromSessionDelegate = null!;
+                _addCookiesToSessionDelegate = null!;
+                _destroySessionDelegate = null!;
+                _destroyAllDelegate = null!;
 
-                    _module = IntPtr.Zero;
+                _module = IntPtr.Zero;
 
-                    _isInitialized = false;
-                }
+                _isInitialized = false;
             }
         }
 
