@@ -20,8 +20,6 @@ namespace TlsClient.Api
             RestClient = new RestClient(new RestClientOptions()
             {
                 BaseUrl= options.ApiBaseUri,
-                Proxy= new WebProxy("http://127.0.0.1:8086"),
-                RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true,
                 Timeout= null,
             });
             RestClient.AddDefaultHeader("x-api-key", options.ApiKey);
