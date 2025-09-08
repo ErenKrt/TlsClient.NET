@@ -8,7 +8,7 @@ This package allows you to make HTTP requests using RestSharp while benefiting f
 Install from NuGet:
 
 ```bash
-dotnet add package TlsClient.RestSharp
+dotnet add package TlsClient.Provider.RestSharp
 ````
 
 ## 🚀 Usage
