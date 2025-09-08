@@ -9,33 +9,6 @@ Console.WriteLine("Hello, World!");
 
 var baseUri = new Uri("http://127.0.0.1:8080/");
 
-/*
-var baseUri = new Uri("http://127.0.0.1:8080/");
-var client = new ApiTlsClient(new ApiTlsClientOptions(TlsClientIdentifier.Chrome133, "TestClient", baseUri, "my-auth-key-1"));
-var response = client.Request(new Request()
-{
-    RequestUrl = "https://httpbin.io/cookies",
-    RequestMethod = HttpMethod.Get,
-});
-
-var cookies = client.GetCookies("https://httpbin.io/cookies");
-
-var addCookies = client.AddCookies("https://httpbin.io/cookies", new List<TlsClientCookie>() {
-    new TlsClientCookie("analinyo","firarinyo", "httpbin.io")
-});
-
-var response2 = client.Request(new Request()
-{
-    RequestUrl = "https://httpbin.io/cookies",
-    RequestMethod = HttpMethod.Get,
-});
-var cookies2 = client.GetCookies("https://httpbin.io/cookies");
-
-var bb= client.DestroyAll();
-
-var ll = "a";
-*/
-
 var tlsClient = new TlsClientBuilder()
     .WithIdentifier(TlsClientIdentifier.Chrome133)
     .WithUserAgent("TlsClient-Example")
@@ -51,5 +24,3 @@ var restClient= new TlsRestClientBuilder()
 
 var request = new RestRequest("/cookies/set?name=31", Method.Get);
 var response = restClient.Execute(request);
-
-var ll = "a";
