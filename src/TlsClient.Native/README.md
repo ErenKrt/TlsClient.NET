@@ -71,6 +71,41 @@ public sealed class NativeTlsClient : BaseTlsClient
 }
 ```
 
+## 🧱 Native Client — Builder Usage
+
+Use the shared `TlsClientBuilder` to configure common options, then switch to the native transport with `WithNative(...)` and call `Build()` to get a `NativeTlsClient`.
+
+```csharp
+    // 1) Initialize native library once
+NativeTlsClient.Initialize("C:\\tools\\tls-client\\tls-client-windows-64-1.11.0.dll");
+    // 2) Create client
+using var client = new TlsClientBuilder()
+    .WithIdentifier(TlsClientIdentifier.Chrome133)
+    .WithUserAgent("MyApp/1.0")
+    .WithFollowRedirects()
+    .WithTimeout(TimeSpan.FromSeconds(15))
+    .WithDefaultCookieJar()
+    .WithHeader("Accept-Language", "en-US,en;q=0.9")
+    .WithProxyUrl("http://127.0.0.1:8086", isRotating: false);
+    .withNative() // OPTIONAL
+    .build()
+
+    // 3) Make a request
+var response = await client.RequestAsync(new Request
+{
+     RequestUrl = "https://httpbin.io/get"
+});
+```
+---
+
+> ⚠️ **Important:**
+>
+> * Call `NativeTlsClient.Initialize(path)` **once per project** before creating clients.
+> * You **can** call `.WithNative(path)` if you dont want use `NativeTlsClient.Initialize(path)`.
+> * Due to C# ↔ Go interop, native mode can be less stable under heavy concurrency. If you run into issues, prefer the API mode.
+
+---
+
 ### Under the Hood
 
 * `Initialize(path)` loads the native library via `TlsClientWrapper.Initialize(...)`.

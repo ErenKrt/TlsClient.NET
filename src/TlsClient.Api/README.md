@@ -88,15 +88,36 @@ public sealed class ApiTlsClient : BaseTlsClient, IAsyncDisposable
 
 ---
 
-## ⚙️ Service Endpoints
+## 🧱 API Client — Builder Usage
 
-The client internally calls these endpoints on the remote service:
+Use the shared builder to configure common options, then switch to the API transport with `WithApi(...)` and call `Build()` to get an `ApiTlsClient`.
 
-* `POST /api/forward` → execute a request
-* `POST /api/cookies/add` → add cookies
-* `POST /api/cookies` → get cookies
-* `POST /api/free-session` → free a single session
-* `GET  /api/free-all` → free all sessions
+```csharp
+    // 1) Create client
+    using var client = new TlsClientBuilder()
+        .WithIdentifier(TlsClientIdentifier.Chrome133)
+        .WithUserAgent("MyApp/1.0")
+        .WithFollowRedirects()
+        .WithTimeout(TimeSpan.FromSeconds(15))
+        .WithDefaultCookieJar()
+        .WithHeader("Accept-Language", "en-US,en;q=0.9")
+        .WithProxyUrl("http://127.0.0.1:8086", isRotating: false);
+        .WithApi(new Uri("http://127.0.0.1:8080"), "my-auth-key-1")
+        .Build();
+
+    // 2) Make a request
+    var response = await client.RequestAsync(new Request
+    {
+        RequestUrl = "https://httpbin.io/get"
+    });
+
+    Console.WriteLine($"{(int)response.Status} {response.Status}");
+    Console.WriteLine(response.Body);
+```
+
+> Note:
+> * You **must** call `.WithApi(...)` **before** `.Build()`; otherwise an `InvalidOperationException` is thrown (by design).
+> * All options you set on the builder (headers, proxy, cookie jar, timeouts, etc.) are forwarded into `ApiTlsClientOptions` inside `WithApi(...)`.
 
 ---
 
