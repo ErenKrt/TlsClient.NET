@@ -49,5 +49,6 @@ namespace TlsClient.Core.Models.Entities
 
             CustomTlsClient= customClient;
         }
+
     }
 }

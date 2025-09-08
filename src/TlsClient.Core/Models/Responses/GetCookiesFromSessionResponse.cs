@@ -8,5 +8,6 @@ namespace TlsClient.Core.Models.Responses
     public class GetCookiesFromSessionResponse : BaseResponse
     {
         public List<TlsClientCookie> Cookies { get; set; } = new List<TlsClientCookie>();
+        
     }
 }

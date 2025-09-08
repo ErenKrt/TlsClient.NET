@@ -6,7 +6,7 @@ namespace TlsClient.Core.Models.Entities
 {
     public class TlsClientCookie
     {
-        public long? Expires { get; set; } = null;
+        public long? Expires { get; set; } = 0;
         public string? Domain { get; set; } = null;
         public string? Name { get; set; } = null;
         public string? Path { get; set; } = null;
