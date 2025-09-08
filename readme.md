@@ -14,6 +14,11 @@ Brings advanced TLS fingerprinting, browser emulation, User-Agent control, heade
 
   * **[`TlsClient.Api`](./src/TlsClient.Api/README.md)** — talks to a running `tls-client` HTTP service.
 
+* **Providers**
+  * **[`TlsClient.HttpClient`](./src/providers/TlsClient.Provider.HttpClient/README.md)** — drop-in `HttpClientHandler` replacement.
+  * **[`TlsClient.RestSharp`](./src/providers/TlsClient.Provider.RestSharp/README.md)** — integration with RestSharp client.
+
+
 > ℹ️ The shared models and builders commonly referred to as “Core” (e.g., `Request`, `Response`, `TlsClientOptions`, `TlsClientIdentifier`, helpers) are **included within each package**. You do **not** install a separate `TlsClient.Core` package.
 
 ---

@@ -10,7 +10,7 @@ This package provides a `TlsClientHandler` that plugs directly into `HttpClient`
 Install from NuGet:
 
 ```bash
-dotnet add package TlsClient.HttpClient
+dotnet add package TlsClient.Provider.HttpClient
 ````
 
 ## 🚀 Usage
