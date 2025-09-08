@@ -4,7 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json.Serialization;
-using TlsClient.Core.Helpers.Converters;
+using TlsClient.Core.Converters;
 using TlsClient.Core.Models.Entities;
 
 namespace TlsClient.Core.Models.Requests

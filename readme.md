@@ -1,104 +1,124 @@
 # TlsClient.Net
 
-A **.NET wrapper** for [bogdanfinn/tls-client](https://github.com/bogdanfinn/tls-client).
-Provides advanced TLS fingerprinting, browser emulation, header ordering, cookie handling, certificate validation control, and proxy support for .NET applications.
+A **.NET wrapper** around [bogdanfinn/tls-client](https://github.com/bogdanfinn/tls-client).
+Brings advanced TLS fingerprinting, browser emulation, User-Agent control, header ordering, cookie handling, certificate validation toggles, and proxy support to .NET.
 
 ---
 
-## 📦 Subpackages
+## 📦 Packages
 
-* **[TlsClient.Core](./src/TlsClient.Core/README.md)** → Core library (options, builders, primitives).
-* **[TlsClient.HttpClient](./src/TlsClient.HttpClient/README.md)** → Drop-in `HttpClientHandler` support.
-* **[TlsClient.RestSharp](./src/TlsClient.RestSharp/README.md)** → RestSharp client integration.
+* **Native**
+
+  * **[`TlsClient.Native`](./src/TlsClient.Native/README.md)** — calls the native `tls-client` library directly (no remote service).
+* **Remote Service**
+
+  * **[`TlsClient.Api`](./src/TlsClient.Api/README.md)** — talks to a running `tls-client` HTTP service.
+
+> ℹ️ The shared models and builders commonly referred to as “Core” (e.g., `Request`, `Response`, `TlsClientOptions`, `TlsClientIdentifier`, helpers) are **included within each package**. You do **not** install a separate `TlsClient.Core` package.
+
+---
+
+## 🧭 Which one should I use?
+
+* **Use `TlsClient.Native`** if you want everything **in-process** and can ship the native library with your app.
+  **Note:** Due to C# ↔ Go native interop, some environments may experience instability or edge-case issues (GC/pinning, P/Invoke marshalling, native memory management). If you hit odd crashes or hangs, prefer the API mode below.
+* **Use `TlsClient.Api`** if you want a **separate service** (local Docker/remote host) and a thin .NET client in your app. This avoids Go interop inside your process and is generally more robust operationally.
+
+Both packages expose the same request/response shapes.
 
 ---
 
 ## ⚙️ Installation
 
-Install the core package:
+### Option A — Native (in-process)
+
+1. Add the package:
 
 ```bash
-dotnet add package TlsClient.Core
+dotnet add package TlsClient.Native
 ```
 
-Then, depending on your OS/architecture, install the appropriate **native library**:
+2. Add the **runtime-specific native binary** for your target platform:
 
-| Operating System | Architecture          | Package to Install                    |
-| ---------------- | --------------------- | ------------------------------------- |
-| Windows          | x64 (64-bit)          | `TlsClient.Native.win-x64`            |
-| Windows          | x86 (32-bit)          | `TlsClient.Native.win-x32`            |
-| Linux (Ubuntu)   | AMD64 (64-bit)        | `TlsClient.Native.linux-ubuntu-amd64` |
-| Linux            | ARM64                 | `TlsClient.Native.linux-arm64`        |
-| Linux            | ARMv7                 | `TlsClient.Native.linux-armv7`        |
-| Linux (Alpine)   | AMD64 (64-bit)        | `TlsClient.Native.linux-alpine-amd64` |
-| macOS            | ARM64 (Apple Silicon) | `TlsClient.Native.darwin-arm64`       |
-| macOS            | AMD64 (Intel)         | `TlsClient.Native.darwin-amd64`       |
+| OS             | Arch  | NuGet package                         |
+| -------------- | ----- | ------------------------------------- |
+| Windows        | x64   | `TlsClient.Native.win-x64`            |
+| Windows        | x86   | `TlsClient.Native.win-x32`            |
+| Linux (Ubuntu) | amd64 | `TlsClient.Native.linux-ubuntu-amd64` |
+| Linux          | arm64 | `TlsClient.Native.linux-arm64`        |
+| Linux          | armv7 | `TlsClient.Native.linux-armv7`        |
+| Linux (Alpine) | amd64 | `TlsClient.Native.linux-alpine-amd64` |
+| macOS (Apple)  | arm64 | `TlsClient.Native.darwin-arm64`       |
+| macOS (Intel)  | amd64 | `TlsClient.Native.darwin-amd64`       |
 
-👉 Use **NuGet** to add the correct native package for your target platform.
+3. Initialize once at startup:
+
+```csharp
+using TlsClient.Native;
+
+NativeTlsClient.Initialize("{PATH_TO_NATIVE_LIBRARY}");
+// e.g. "C:\\tools\\tls-client\\tls-client-windows-64-1.11.0.dll"
+```
+
+> ⚠️ Without `NativeTlsClient.Initialize(...)`, native mode won’t work.
+
+**Interop note (important):** C# calling into the Go native library can be less stable on some systems (especially under heavy concurrency). If you encounter flakiness (random SIG… signals, heap issues, or unexplained timeouts), switch to `TlsClient.Api`.
 
 ---
 
-## 🔑 Initialization
+### Option B — API (service)
 
-Before creating any `TlsClient`, you **must** initialize the wrapper with the path to the native library (`tls-client`):
+If you run a `tls-client` HTTP service (local/remote):
 
-```csharp
-using TlsClient.Core;
-
-// initialize once at app startup
-TlsClient.Initialize("{LIBRARY_PATH}");
-
-// then create clients normally
-var client = new TlsClientBuilder()
-    .WithIdentifier(TlsClientIdentifier.Chrome132)
-    .WithUserAgent("TlsClient.NET/1.0")
-    .Build();
+```bash
+dotnet add package TlsClient.Api
 ```
 
-> ⚠️ Without `TlsClient.Initialize(path)` the library will not work.
+No native init required; just point to the service URL and provide an API key.
 
 ---
 
 ## 🚀 Quick Start
 
-### Example 1 – Core client
+### Native (in-process)
 
 ```csharp
-using TlsClient.Core;
+using TlsClient.Native;
+using TlsClient.Core.Models.Requests; // bundled inside package
 
-TlsClient.Initialize("{LIBRARY_PATH}");
+NativeTlsClient.Initialize("{PATH_TO_NATIVE_LIBRARY}");
 
-var tlsClient = new TlsClientBuilder()
-    .WithIdentifier(TlsClientIdentifier.Chrome132)
-    .WithUserAgent("TlsClient.NET/1.0")
-    .WithFollowRedirects()
-    .WithTimeout(TimeSpan.FromSeconds(10))
-    .Build();
+using var client = new NativeTlsClient();
+var res = client.Request(new Request { RequestUrl = "https://httpbin.io/get" });
+Console.WriteLine(res.Status);
 ```
 
-### Example 2 – With HttpClient
+### API (service)
 
 ```csharp
-using TlsClient.Core;
-using TlsClient.HttpClient;
+using TlsClient.Api;
+using TlsClient.Core.Models.Requests; // bundled inside package
 
-TlsClient.Initialize("{LIBRARY_PATH}");
-
-var handler = new TlsClientHandler(
-    new TlsClientOptions(TlsClientIdentifier.Chrome132, "CustomUA/1.0")
-);
-
-using var http = new System.Net.Http.HttpClient(handler);
-var html = await http.GetStringAsync("https://httpbin.org/get");
-Console.WriteLine(html);
+using var client = new ApiTlsClient(new Uri("http://127.0.0.1:8080"), "my-auth-key-1");
+var res = client.Request(new Request { RequestUrl = "https://httpbin.io/get" });
+Console.WriteLine(res.Status);
 ```
+
+> For additional scenarios, please refer to the test projects in each package.
 
 ---
 
 ## 🧯 Support & Issues
 
-* For **.NET wrapper issues** → open an issue here.
-* For **native TLS client issues** → open an issue at [bogdanfinn/tls-client](https://github.com/bogdanfinn/tls-client).
+* Wrapper/packaging issues → open an issue **here**.
+* Native TLS engine issues → [bogdanfinn/tls-client](https://github.com/bogdanfinn/tls-client).
+
+---
+
+## 🔬 Learn More
+
+This focuses on setup.
+For **additional scenarios**, please refer to the test projects.
 
 ---
 
@@ -108,11 +128,10 @@ Licensed under the **MIT License**.
 See [LICENSE](./LICENSE) for details.
 
 ---
-## ©️ Copyright & Contact
 
-**© 2025 TlsClient.NET**
+## ©️ Copyright
 
-Maintained by **Eren Kurt**
+**© 2025 TlsClient.NET** — Maintained by **Eren Kurt**
 
-* 🐙 GitHub → [@ErenKrt](https://github.com/ErenKrt)
-* 📷 Instagram → [@ep.eren](https://instagram.com/ep.eren)
+* GitHub: [@ErenKrt](https://github.com/ErenKrt)
+* Instagram: [@ep.eren](https://instagram.com/ep.eren)
