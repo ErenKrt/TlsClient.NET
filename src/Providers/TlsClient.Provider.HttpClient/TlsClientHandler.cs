@@ -16,14 +16,15 @@ namespace TlsClient.HttpClient
     public class TlsClientHandler : HttpClientHandler
     {
         private readonly BaseTlsClient _client;
+        private bool _isRestClient;
 
-        public TlsClientHandler(BaseTlsClient client)
+        public TlsClientHandler(BaseTlsClient client, bool isRestClient= false)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
-            if (_client.Options.WithoutCookieJar)
-            {
-                this.UseCookies = false;
-            }
+            _isRestClient = isRestClient;
+
+            // Always true, cookies will manage by httpClientHandler
+            _client.Options.WithoutCookieJar = true;
         }
    
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -44,25 +45,25 @@ namespace TlsClient.HttpClient
                     tlsRequestBuilder.WithHeader("Content-Type", contentType.ToString());
                 }
             }
-            
+
             // Add headers
             foreach (var header in request.GetHeaderDictionary())
             {
                 tlsRequestBuilder.WithHeader(header.Key, header.Value);
             }
 
-            // Adding cookies with header, native tls client not tested with cookiejar
-            var cookies = this.CookieContainer?.GetAllCookies();
-            if (cookies?.Any() == true)
+            // For raw http-client
+            if (!_isRestClient && UseCookies)
             {
-                var cookieHeader = string.Join("; ", cookies.Select(cookie => $"{cookie.Name}={cookie.Value}"));
-                tlsRequestBuilder.WithHeader("Cookie", cookieHeader);
+                var requestCokies = CookieContainer.GetCookies(request.RequestUri);
+                foreach (Cookie requestCookie in requestCokies)
+                {
+                    tlsRequestBuilder.WithCookie(requestCookie.Name, requestCookie.Value);
+                }
             }
 
             var tlsRequest= tlsRequestBuilder.Build();
             var response = await _client.RequestAsync(tlsRequest, cancellationToken) ?? throw new Exception("Response was returned null from Native Tls Client");
-            
-            
             
             if (response.Status == 0 && !response.Body.Contains("Timeout"))
             {
@@ -97,6 +98,26 @@ namespace TlsClient.HttpClient
             foreach (var header in headers)
             {
                 httpResponseMessage.Headers.TryAddWithoutValidation(header.Key, header.Value);
+            }
+
+            // for raw http-client
+            if (!_isRestClient && UseCookies)
+            {
+                var setCookieHeader = response!.Headers.FirstOrDefault(h => string.Equals(h.Key, "Set-Cookie", StringComparison.OrdinalIgnoreCase));
+
+                if (setCookieHeader.Value != null)
+                {
+                    foreach (var cookieString in setCookieHeader.Value)
+                    {
+                        try
+                        {
+                            CookieContainer.SetCookies(request.RequestUri, cookieString);
+                        }
+                        catch {
+
+                        }
+                    }
+                }
             }
 
             return httpResponseMessage;

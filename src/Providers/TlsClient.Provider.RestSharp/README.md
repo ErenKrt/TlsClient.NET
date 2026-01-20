@@ -37,6 +37,7 @@ var tlsClient = new TlsClientBuilder()
 var restClient = new TlsRestClientBuilder()
     .WithTlsClient(tlsClient)
     .WithBaseUrl("https://httpbin.org")
+    .WithCookieContainer(CookieContainer? cookieContainer= null)
     .Build();
 
 // make request

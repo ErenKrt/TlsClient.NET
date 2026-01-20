@@ -7,6 +7,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using TlsClient.Core.Models.Entities;
+using TlsClient.HttpClient;
 using TlsClient.Native;
 using TlsClient.RestSharp.Helpers.Builders;
 
@@ -16,19 +17,18 @@ namespace TlsClient.RestSharp.Tests
     {
         static CookieTests()
         {
-            NativeTlsClient.Initialize("D:\\Tools\\TlsClient\\tls-client-windows-64-1.10.0.dll");
+            NativeTlsClient.Initialize("D:\\Tools\\tls-client-windows-64-1.13.1.dll");
         }
 
         [Fact]
         public void Should_Keep_Cookie()
         {
-            using var client = new NativeTlsClient(new TlsClientOptions(TlsClientIdentifier.Chrome133, "TlsClient.NET 1.0")
-            {
-                WithCustomCookieJar = true
-            });
+            using var client = new NativeTlsClient(new TlsClientOptions(TlsClientIdentifier.Chrome133, "TlsClient.NET 1.0"));
+
             using var restClient = new TlsRestClientBuilder()
                 .WithTlsClient(client)
                 .WithBaseUrl("https://httpbin.io")
+                .WithCookieContainer()
                 .Build();
 
             var setCookiesRequest= new RestRequest("/cookies/set?sessionid=123456");
@@ -62,22 +62,18 @@ namespace TlsClient.RestSharp.Tests
         }
 
         [Fact]
-        public void Should_Set_Cookie_From_Client()
+        public void Should_Set_Cookie_From_CookieContainer()
         {
+            var cookieJar = new CookieContainer();
+            cookieJar.Add(new Cookie("sessionid", "123456", "/", "httpbin.io"));
+
             using var client = new NativeTlsClient(new TlsClientOptions(TlsClientIdentifier.Chrome133, "TlsClient.NET 1.0"));
             
             using var restClient = new TlsRestClientBuilder()
                 .WithTlsClient(client)
                 .WithBaseUrl("https://httpbin.io")
+                .WithCookieContainer(cookieJar)
                 .Build();
-
-            // Init session with first request
-            restClient.Execute(new RestRequest("/cookies"));
-
-            var cookieResponse = client.AddCookies("https://httpbin.io", new List<TlsClientCookie>()
-            {
-                new TlsClientCookie("sessionid", "123456", "httpbin.io")
-            });
 
             var request = new RestRequest("/cookies");
             var response = restClient.Execute(request);
