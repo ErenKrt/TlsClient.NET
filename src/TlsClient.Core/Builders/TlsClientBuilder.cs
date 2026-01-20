@@ -73,9 +73,9 @@ namespace TlsClient.Core.Builders
             return this;
         }
 
-        public TlsClientBuilder WithDefaultCookieJar(bool enabled = true)
+        public TlsClientBuilder WithCustomCookieJar(bool enabled = true)
         {
-            _options.WithDefaultCookieJar = enabled;
+            _options.WithCustomCookieJar = enabled;
             _options.WithoutCookieJar = !enabled;
             return this;
         }
@@ -83,7 +83,7 @@ namespace TlsClient.Core.Builders
         public TlsClientBuilder WithoutCookieJar(bool enabled = true)
         {
             _options.WithoutCookieJar = enabled;
-            _options.WithDefaultCookieJar = !enabled;
+            _options.WithCustomCookieJar = !enabled;
             return this;
         }
 

@@ -45,9 +45,14 @@ namespace TlsClient.Core.Models.Requests
         public bool? IsRotatingProxy { get; set; } = null;
         public bool? DisableIPV6 { get; set; } = null;
         public bool? DisableIPV4 { get; set; } = null;
+        public bool? DisableHttp3 { get; set; } = null;
         public bool? WithDebug { get; set; } = null;
-        public bool? WithDefaultCookieJar { get; set; } = null;
+        /* if is true creates cookie jar from tls-client-api, can be use withDebug */
+        public bool? WithCustomCookieJar { get; set; } = null;
+        /* if is true not using cookie jar on tls-client-api */
         public bool? WithoutCookieJar { get; set; } = null;
         public bool? WithRandomTLSExtensionOrder { get; set; } = null;
+        public bool? WithProtocolRacing {  get; set; } = null;
+        public bool? EuckrResponse { get; set; } = null;
     }
 }

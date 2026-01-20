@@ -10,7 +10,7 @@ namespace TlsClient.Core.Tests
     {
         static ClientTests()
         {
-            NativeTlsClient.Initialize("D:\\Tools\\TlsClient\\tls-client-windows-64-1.10.0.dll");
+            NativeTlsClient.Initialize("D:\\Tools\\tls-client-windows-64-1.13.1.dll");
         }
 
         [Fact]

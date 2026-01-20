@@ -30,7 +30,7 @@ namespace TlsClient.Native
             {
                 var payload = RequestHelpers.Prepare(request);
                 var rawResponse = TlsClientWrapper.Request(payload);
-                response = RequestHelpers.ConvertObject<Response>(rawResponse) ?? throw new Exception("Response is null, can't convert object from json.");
+                response = rawResponse.FromJson<Response>() ?? throw new Exception("Response is null, can't convert object from json.");
             }
             catch (Exception err)
             {
@@ -59,24 +59,25 @@ namespace TlsClient.Native
         {
             var payload = PrepareGetCookies(url);
             var rawResponse = TlsClientWrapper.GetCookiesFromSession(RequestHelpers.Prepare(payload));
-            return RequestHelpers.ConvertObject<GetCookiesFromSessionResponse>(rawResponse) ?? throw new Exception("Response is null, can't convert object from json.");
+            
+            return rawResponse.FromJson<GetCookiesFromSessionResponse>() ?? throw new Exception("Response is null, can't convert object from json.");
         }
         public override GetCookiesFromSessionResponse AddCookies(string url, List<TlsClientCookie> cookies)
         {
             var payload = PrepareAddCookies(url, cookies);
             var rawResponse = TlsClientWrapper.AddCookiesToSession(RequestHelpers.Prepare(payload));
-            return RequestHelpers.ConvertObject<GetCookiesFromSessionResponse>(rawResponse) ?? throw new Exception("Response is null, can't convert object from json.");
+            return rawResponse.FromJson<GetCookiesFromSessionResponse>() ?? throw new Exception("Response is null, can't convert object from json.");
         }
         public override DestroyResponse Destroy()
         {
             var payload = PrepareDestroy();
             var rawResponse = TlsClientWrapper.DestroySession(RequestHelpers.Prepare(payload));
-            return RequestHelpers.ConvertObject<DestroyResponse>(rawResponse) ?? throw new Exception("Response is null, can't convert object from json.");
+            return rawResponse.FromJson<DestroyResponse>() ?? throw new Exception("Response is null, can't convert object from json.");
         }
         public override DestroyResponse DestroyAll()
         {
             var rawResponse = TlsClientWrapper.DestroyAll();
-            return RequestHelpers.ConvertObject<DestroyResponse>(rawResponse) ?? throw new Exception("Response is null, can't convert object from json.");
+            return rawResponse.FromJson<DestroyResponse>() ?? throw new Exception("Response is null, can't convert object from json.");
         }
         #endregion
 

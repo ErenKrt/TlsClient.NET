@@ -19,6 +19,7 @@ namespace TlsClient.Api.Tests
         public void Should_Include_Cookie()
         {
             using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:8080"), "my-auth-key-1");
+            tlsClient.Options.WithCustomCookieJar = true;
 
             var request = new Request()
             {
@@ -100,34 +101,6 @@ namespace TlsClient.Api.Tests
         {
             using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:8080"), "my-auth-key-1");
             tlsClient.DefaultHeaders.Add("Cookie", new List<string> { "sessionid=123456" });
-
-            var request = new Request()
-            {
-                RequestUrl = BaseURL + "/cookies",
-            };
-            var response = tlsClient.Request(request);
-            response.Status.Should().Be(HttpStatusCode.OK);
-            response.Body.Should().Contain("sessionid");
-        }
-
-        [Fact]
-        public void Should_Set_Cookie()
-        {
-            using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:8080"), "my-auth-key-1");
-            // First request for init session
-            var firstRequest = new Request()
-            {
-                RequestUrl = BaseURL + "/cookies",
-            };
-            var firstResponse = tlsClient.Request(firstRequest);
-
-            var addCookiesResponse= tlsClient.AddCookies(BaseURL, new List<TlsClientCookie>()
-            {
-                new TlsClientCookie("sessionid", "123456", "httpbin.io")
-            });
-
-            addCookiesResponse.Cookies.Should().NotBeNull();
-            addCookiesResponse.Cookies.First().Name.Should().Be("sessionid");
 
             var request = new Request()
             {

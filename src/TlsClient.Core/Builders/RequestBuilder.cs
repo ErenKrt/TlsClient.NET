@@ -52,7 +52,7 @@ namespace TlsClient.Core.Builders
 
         public RequestBuilder WithBody(object data)
         {
-            _request.RequestBody = RequestHelpers.ConvertJson(data);
+            _request.RequestBody = RequestHelpers.ToJson(data);
             return this;
         }
 

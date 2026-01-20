@@ -17,7 +17,7 @@ namespace TlsClient.Core.Tests
     {
         static PerformanceTests()
         {
-            NativeTlsClient.Initialize("D:\\Tools\\TlsClient\\tls-client-windows-64-1.11.0.dll");
+            NativeTlsClient.Initialize("D:\\Tools\\tls-client-windows-64-1.13.1.dll");
         }
 
         [Fact]

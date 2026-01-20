@@ -14,7 +14,7 @@ namespace TlsClient.Core.Tests
         public static readonly string BaseURL = "https://httpbin.io";
         static HeaderTests()
         {
-            NativeTlsClient.Initialize("D:\\Tools\\TlsClient\\tls-client-windows-64-1.10.0.dll");
+            NativeTlsClient.Initialize("D:\\Tools\\tls-client-windows-64-1.13.1.dll");
         }
 
         [Fact]
@@ -84,20 +84,18 @@ namespace TlsClient.Core.Tests
         [Fact]
         public void Should_Override_Host()
         {
-            var baseHost = "example.com";
-            var realIp = "http://23.220.75.245";
+            var baseHost = "httpbin.org";
+            var realIp = "http://35.169.229.34";
 
             using var tlsClient = new NativeTlsClient();
             var request = new Request()
             {
                 RequestUrl = realIp,
-                Headers = new Dictionary<string, string>()
-                {
-                    { "Host", baseHost }
-                }
+                RequestHostOverride= baseHost,
+                InsecureSkipVerify= true
             };
             var response = tlsClient.Request(request);
-            Assert.Contains($"Example Domain", response.Body);
+            Assert.Contains($"httpbin", response.Body);
         }
     }
 }

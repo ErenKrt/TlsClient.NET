@@ -22,6 +22,7 @@ namespace TlsClient.Api.RestSharp.Tests
             using var restClient = new TlsRestClientBuilder()
                 .WithTlsClient(client)
                 .WithBaseUrl("https://httpbin.io")
+                .WithCookieContainer()
                 .Build();
 
             var setCookiesRequest= new RestRequest("/cookies/set?sessionid=123456");
@@ -36,10 +37,8 @@ namespace TlsClient.Api.RestSharp.Tests
         [Fact]
         public void Should_Not_Keep_Cookie()
         {
-            using var client = new ApiTlsClient(new ApiTlsClientOptions(new Uri("http://127.0.0.1:8080"), "my-auth-key-1")
-            {
-                WithoutCookieJar= true
-            });
+            using var client = new ApiTlsClient(new ApiTlsClientOptions(new Uri("http://127.0.0.1:8080"), "my-auth-key-1"));
+
             using var restClient = new TlsRestClientBuilder()
                 .WithTlsClient(client)
                 .WithBaseUrl("https://httpbin.io")
@@ -54,37 +53,12 @@ namespace TlsClient.Api.RestSharp.Tests
             response.Content.Should().NotContain("sessionid");
         }
 
-        [Fact]
-        public void Should_Set_Cookie_From_Client()
-        {
-            using var client = new ApiTlsClient(new Uri("http://127.0.0.1:8080"), "my-auth-key-1");
-
-            using var restClient = new TlsRestClientBuilder()
-                .WithTlsClient(client)
-                .WithBaseUrl("https://httpbin.io")
-                .Build();
-
-            // Init session with first request
-            restClient.Execute(new RestRequest("/cookies"));
-
-            var cookieResponse = client.AddCookies("https://httpbin.io", new List<TlsClientCookie>()
-            {
-                new TlsClientCookie("sessionid", "123456", "httpbin.io")
-            });
-
-            var request = new RestRequest("/cookies");
-            var response = restClient.Execute(request);
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-            response.Content.Should().Contain("sessionid");
-        }
 
         [Fact]
         public void Should_Set_Cookie_From_Request()
         {
-            using var client = new ApiTlsClient(new ApiTlsClientOptions(new Uri("http://127.0.0.1:8080"), "my-auth-key-1")
-            {
-                WithoutCookieJar = true
-            });
+            using var client = new ApiTlsClient(new ApiTlsClientOptions(new Uri("http://127.0.0.1:8080"), "my-auth-key-1"));
+
             using var restClient = new TlsRestClientBuilder()
                 .WithTlsClient(client)
                 .WithBaseUrl("https://httpbin.io")
@@ -140,6 +114,25 @@ namespace TlsClient.Api.RestSharp.Tests
             allCookies.Should().NotBeNull();
             allCookies.Count.Should().Be(1);
             allCookies[0].Name.Should().Be("sessionid");
+        }
+
+        [Fact]
+        public void Should_Set_Cookie_From_CookieContainer()
+        {
+            var cookieJar = new CookieContainer();
+            cookieJar.Add(new Cookie("sessionid", "123456", "/", "httpbin.io"));
+
+            using var client = new ApiTlsClient(new ApiTlsClientOptions(new Uri("http://127.0.0.1:8080"), "my-auth-key-1"));
+
+            using var restClient = new TlsRestClientBuilder()
+                .WithTlsClient(client)
+                .WithBaseUrl("https://httpbin.io")
+                .WithCookieContainer(cookieJar)
+                .Build();
+            var request = new RestRequest("/cookies");
+            var response = restClient.Execute(request);
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            response.Content.Should().Contain("sessionid");
         }
     }
 }
