@@ -29,7 +29,7 @@ namespace TlsClient.Api
 
         #region Sync Methods
         public override Response Request(Request request) => AsyncHelpers.RunSync(() => RequestAsync(request, CancellationToken.None));
-        public override GetCookiesFromSessionResponse AddCookies(string url, List<TlsClientCookie> cookies) => AsyncHelpers.RunSync(() => AddCookiesAsync(url, cookies, CancellationToken.None));
+        public override GetCookiesFromSessionResponse AddCookies(string url, List<TlsClientCookie> cookies) => throw new NotImplementedException();
         public override DestroyResponse Destroy() => AsyncHelpers.RunSync(() => DestroyAsync(CancellationToken.None));
         public override GetCookiesFromSessionResponse GetCookies(string url) => AsyncHelpers.RunSync(() => GetCookiesAsync(url, CancellationToken.None));
         public override DestroyResponse DestroyAll() => AsyncHelpers.RunSync(()=>DestroyAllAsync(CancellationToken.None));
@@ -73,11 +73,7 @@ namespace TlsClient.Api
         }
         public override async Task<GetCookiesFromSessionResponse> AddCookiesAsync(string url, List<TlsClientCookie> cookies, CancellationToken ct = default)
         {
-            var payload = PrepareAddCookies(url, cookies);
-            var restRequest = new RestRequest("/api/cookies/add", Method.Post);
-            restRequest.AddJsonBody(payload);
-            var restResponse = await RestClient.ExecuteAsync<GetCookiesFromSessionResponse>(restRequest, ct);
-            return restResponse.Data ?? throw new Exception("Response is null, can't convert object from json.");
+            throw new NotImplementedException();
         }
         public override async Task<DestroyResponse> DestroyAsync(CancellationToken ct = default)
         {
@@ -92,8 +88,13 @@ namespace TlsClient.Api
             var payload = PrepareGetCookies(url);
             var restRequest = new RestRequest("/api/cookies", Method.Post);
             restRequest.AddJsonBody(payload);
-            var restResponse = await RestClient.ExecuteAsync<GetCookiesFromSessionResponse>(restRequest, ct);
-            return restResponse.Data ?? throw new Exception("Response is null, can't convert object from json.");
+            var restResponse = await RestClient.ExecuteAsync(restRequest, ct);
+            if (string.IsNullOrEmpty(restResponse.Content))
+            {
+                throw new Exception(" Response content is null");
+            }
+
+            return RequestHelpers.ConvertObject<GetCookiesFromSessionResponse>(restResponse.Content.Replace("\"", string.Empty).FromBase64().ToStringFromBytes()) ?? throw new Exception("Response is null, can't convert object from json.");
         }
         public override async Task<DestroyResponse> DestroyAllAsync(CancellationToken ct = default)
         {

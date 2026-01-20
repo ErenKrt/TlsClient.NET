@@ -17,12 +17,15 @@ namespace TlsClient.Core.Models.Entities
         public bool InsecureSkipVerify { get; set; } = false;
         public bool DisableIPV4 { get; set; } = false;
         public bool DisableIPV6 { get; set; } = false;
+        public bool DisableHttp3 { get; set; } = false;
+        public bool WithProtocolRacing {  get; set; } = false;
         public bool WithDebug { get; set; } = false;
-        public bool WithDefaultCookieJar { get; set; } = false;
+        public bool WithCustomCookieJar { get; set; } = false;
         public bool WithoutCookieJar { get; set; } = false;
         public bool CatchPanics { get; set; } = false; 
         public bool ForceHttp1 { get; set; } = false;
         public bool WithRandomTLSExtensionOrder { get; set; } = false;
+        public bool EuckrResponse {  get; set; } = false;
         public List<string>? HeaderOrder { get; set; } = null;
         public Dictionary<string, List<string>>? CertificatePinningHosts { get; set; } = null;
         public Dictionary<string, List<string>>? ConnectHeaders { get; set; } = null;

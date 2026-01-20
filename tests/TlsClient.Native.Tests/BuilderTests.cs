@@ -17,7 +17,7 @@ namespace TlsClient.Core.Tests
     {
         static BuilderTests()
         {
-            NativeTlsClient.Initialize("D:\\Tools\\TlsClient\\tls-client-windows-64-1.11.0.dll");
+            NativeTlsClient.Initialize("D:\\Tools\\tls-client-windows-64-1.13.1.dll");
         }
 
 
@@ -27,13 +27,12 @@ namespace TlsClient.Core.Tests
             using var tlsClient = new TlsClientBuilder()
                 .WithIdentifier(TlsClientIdentifier.Chrome133)
                 .WithTimeout(TimeSpan.FromSeconds(10))
-                .WithDefaultCookieJar()
+                .WithCustomCookieJar()
                 .WithInsecureSkipVerify()
                 .WithHeader("show", "must go on")
                 .WithDebug()
                 .WithCatchPanics()
                 .WithRandomTLSExtensionOrder()
-                .WithDefaultCookieJar()
                 .WithUserAgent("TlsClient.NET 1.0")
                 .Build();
 
@@ -51,6 +50,7 @@ namespace TlsClient.Core.Tests
         public void Should_Build_Request()
         {
             using var tlsClient = new NativeTlsClient();
+            tlsClient.Options.WithCustomCookieJar = true;
 
             var request = new RequestBuilder()
                 .WithUrl("https://httpbin.io/headers")
@@ -59,6 +59,7 @@ namespace TlsClient.Core.Tests
                 .WithCookie("hi", "there")
                 .WithBody("hi")
                 .Build();
+
             var response = tlsClient.Request(request);
             response.Status.Should().Be(HttpStatusCode.OK);
             response.Body.Should().Contain("must go on");

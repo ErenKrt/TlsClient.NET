@@ -81,17 +81,14 @@ namespace TlsClient.Api.Tests
         [Fact]
         public void Should_Override_Host()
         {
-            var baseHost = "example.com";
-            var realIp = "http://23.220.75.245";
+            var baseHost = "httpbin.org";
+            var realIp = "http://35.169.229.34";
 
             using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:8080"), "my-auth-key-1");
             var request = new Request()
             {
                 RequestUrl = realIp,
-                Headers = new Dictionary<string, string>()
-                {
-                    { "Host", baseHost }
-                }
+                RequestHostOverride = baseHost,
             };
             var response = tlsClient.Request(request);
             Assert.Contains($"Example Domain", response.Body);

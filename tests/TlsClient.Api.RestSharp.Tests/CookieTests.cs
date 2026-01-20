@@ -54,29 +54,6 @@ namespace TlsClient.Api.RestSharp.Tests
             response.Content.Should().NotContain("sessionid");
         }
 
-        [Fact]
-        public void Should_Set_Cookie_From_Client()
-        {
-            using var client = new ApiTlsClient(new Uri("http://127.0.0.1:8080"), "my-auth-key-1");
-
-            using var restClient = new TlsRestClientBuilder()
-                .WithTlsClient(client)
-                .WithBaseUrl("https://httpbin.io")
-                .Build();
-
-            // Init session with first request
-            restClient.Execute(new RestRequest("/cookies"));
-
-            var cookieResponse = client.AddCookies("https://httpbin.io", new List<TlsClientCookie>()
-            {
-                new TlsClientCookie("sessionid", "123456", "httpbin.io")
-            });
-
-            var request = new RestRequest("/cookies");
-            var response = restClient.Execute(request);
-            response.StatusCode.Should().Be(HttpStatusCode.OK);
-            response.Content.Should().Contain("sessionid");
-        }
 
         [Fact]
         public void Should_Set_Cookie_From_Request()

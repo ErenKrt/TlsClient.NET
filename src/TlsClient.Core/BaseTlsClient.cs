@@ -57,7 +57,7 @@ namespace TlsClient.Core
             request.DisableIPV4 ??= Options.DisableIPV4;
             request.DisableIPV6 ??= Options.DisableIPV6;
             request.WithDebug ??= Options.WithDebug;
-            request.WithDefaultCookieJar ??= Options.WithDefaultCookieJar;
+            request.WithCustomCookieJar ??= Options.WithCustomCookieJar;
             request.WithoutCookieJar ??= Options.WithoutCookieJar;
             request.CustomTlsClient ??= Options.CustomTlsClient;
             request.CatchPanics ??= Options.CatchPanics;
@@ -66,6 +66,10 @@ namespace TlsClient.Core
             request.WithRandomTLSExtensionOrder ??= Options.WithRandomTLSExtensionOrder;
             request.HeaderOrder ??= Options.HeaderOrder;
             request.ConnectHeaders ??= Options.ConnectHeaders;
+            request.DisableHttp3 ??= Options.DisableHttp3;
+            request.WithProtocolRacing ??= Options.WithProtocolRacing;
+            request.EuckrResponse ??= Options.EuckrResponse;
+
 
             if (request.CustomTlsClient != null)
                 request.TlsClientIdentifier = default!;

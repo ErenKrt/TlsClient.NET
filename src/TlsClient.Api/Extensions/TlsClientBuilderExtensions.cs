@@ -29,9 +29,12 @@ namespace TlsClient.Api.Extensions
                 WithDebug = builder._options.WithDebug,
                 CertificatePinningHosts = builder._options.CertificatePinningHosts,
                 ConnectHeaders = builder._options.ConnectHeaders,
-                WithDefaultCookieJar = builder._options.WithDefaultCookieJar,
+                WithCustomCookieJar = builder._options.WithCustomCookieJar,
                 WithoutCookieJar = builder._options.WithoutCookieJar,
                 WithRandomTLSExtensionOrder = builder._options.WithRandomTLSExtensionOrder,
+                EuckrResponse = builder._options.EuckrResponse,
+                WithProtocolRacing = builder._options.WithProtocolRacing,
+                DisableHttp3 = builder._options.DisableHttp3,
             };
 
             return builder;

@@ -24,7 +24,7 @@ namespace TlsClient.RestSharp.Tests
         {
             using var client = new NativeTlsClient(new TlsClientOptions(TlsClientIdentifier.Chrome133, "TlsClient.NET 1.0")
             {
-                WithDefaultCookieJar = true
+                WithCustomCookieJar = true
             });
             using var restClient = new TlsRestClientBuilder()
                 .WithTlsClient(client)
@@ -113,7 +113,7 @@ namespace TlsClient.RestSharp.Tests
 
             using var client = new NativeTlsClient(new TlsClientOptions(TlsClientIdentifier.Chrome133, "TlsClient.NET 1.0")
             {
-                WithDefaultCookieJar = true,
+                WithCustomCookieJar = true,
             });
 
             using var restClient = new TlsRestClientBuilder()
@@ -135,7 +135,7 @@ namespace TlsClient.RestSharp.Tests
             
             using var client = new NativeTlsClient(new TlsClientOptions(TlsClientIdentifier.Chrome133, "TlsClient.NET 1.0")
             {
-                WithDefaultCookieJar = true,
+                WithCustomCookieJar = true,
             });
 
             using var restClient = new TlsRestClientBuilder()

@@ -17,13 +17,14 @@ namespace TlsClient.Core.Tests
 
         static CookieTests()
         {
-            NativeTlsClient.Initialize("D:\\Tools\\TlsClient\\tls-client-windows-64-1.10.0.dll");
+            NativeTlsClient.Initialize("D:\\Tools\\tls-client-windows-64-1.13.1.dll");
         }
 
         [Fact]
         public void Should_Include_Cookie()
         {
             using var tlsClient = new NativeTlsClient();
+            tlsClient.Options.WithCustomCookieJar= true;
 
             var request = new Request()
             {
@@ -43,7 +44,7 @@ namespace TlsClient.Core.Tests
         {
             using var tlsClient = new NativeTlsClient(new TlsClientOptions(TlsClientIdentifier.Chrome133, "TlsClient.NET 1.0")
             {
-                WithDefaultCookieJar = true
+                WithCustomCookieJar = true
             });
             var request = new Request()
             {
@@ -121,6 +122,8 @@ namespace TlsClient.Core.Tests
         public void Should_Set_Cookie()
         {
             using var tlsClient = new NativeTlsClient(new TlsClientOptions(TlsClientIdentifier.Chrome133, "TlsClient.NET 1.0"));
+            tlsClient.Options.WithCustomCookieJar = true;
+
             // First request for init session
             var firstRequest = new Request()
             {
@@ -148,10 +151,7 @@ namespace TlsClient.Core.Tests
         [Fact]
         public void Should_Get_Cookie()
         {
-            using var tlsClient = new NativeTlsClient(new TlsClientOptions(TlsClientIdentifier.Chrome133, "TlsClient.NET 1.0")
-            {
-                WithDefaultCookieJar = true
-            });
+            using var tlsClient = new NativeTlsClient(new TlsClientOptions(TlsClientIdentifier.Chrome133, "TlsClient.NET 1.0"));
 
             var request = new Request()
             {
