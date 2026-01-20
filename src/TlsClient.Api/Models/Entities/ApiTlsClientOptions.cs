@@ -1,7 +1,4 @@
-﻿using RestSharp;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
 using TlsClient.Core.Models.Entities;
 
 namespace TlsClient.Api.Models.Entities

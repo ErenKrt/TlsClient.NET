@@ -91,7 +91,7 @@ namespace TlsClient.Api.Tests
                 RequestHostOverride = baseHost,
             };
             var response = tlsClient.Request(request);
-            Assert.Contains($"Example Domain", response.Body);
+            Assert.Contains($"httpbin", response.Body);
         }
     }
 }
