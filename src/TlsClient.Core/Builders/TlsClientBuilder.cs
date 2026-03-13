@@ -66,7 +66,11 @@ namespace TlsClient.Core.Builders
             _options.DisableIPV4 = disabled;
             return this;
         }
-
+        public TlsClientBuilder WithServerNameOverwrite(string serverName)
+        {
+            _options.ServerNameOverwrite = serverName;
+            return this;
+        }
         public TlsClientBuilder WithDisableIPV6(bool disabled = true)
         {
             _options.DisableIPV6 = disabled;
@@ -142,6 +146,12 @@ namespace TlsClient.Core.Builders
         public TlsClientBuilder WithForceHttp1(bool enabled = true)
         {
             _options.ForceHttp1 = enabled;
+            return this;
+        }
+
+        public TlsClientBuilder WithDisableHttp3(bool enabled = true)
+        {
+            _options.DisableHttp3 = enabled;
             return this;
         }
 
