@@ -35,6 +35,7 @@ namespace TlsClient.Api.Extensions
                 EuckrResponse = builder._options.EuckrResponse,
                 WithProtocolRacing = builder._options.WithProtocolRacing,
                 DisableHttp3 = builder._options.DisableHttp3,
+                ServerNameOverwrite= builder._options.ServerNameOverwrite,
             };
 
             return builder;
