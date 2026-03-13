@@ -13,6 +13,7 @@ namespace TlsClient.Core.Models.Entities
         public string? ProxyURL { get; set; }
         public bool IsRotatingProxy { get; set; } = false;
         public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(60);
+        public string? ServerNameOverwrite { get; set; }
         public bool FollowRedirects { get; set; } = false;
         public bool InsecureSkipVerify { get; set; } = false;
         public bool DisableIPV4 { get; set; } = false;

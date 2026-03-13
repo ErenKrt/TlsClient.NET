@@ -69,7 +69,7 @@ namespace TlsClient.Core
             request.DisableHttp3 ??= Options.DisableHttp3;
             request.WithProtocolRacing ??= Options.WithProtocolRacing;
             request.EuckrResponse ??= Options.EuckrResponse;
-
+            request.ServerNameOverwrite ??= Options.ServerNameOverwrite;
 
             if (request.CustomTlsClient != null)
                 request.TlsClientIdentifier = default!;
