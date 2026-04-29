@@ -5,6 +5,10 @@ const fsPromises = fs.promises;
 // Define paths based on environment variables
 const basePath = process.env.GITHUB_WORKSPACE;
 const tlsVersion = process.env.TLS_CLIENT_VERSION?.replace('v', '') || '';
+// PACKAGE_VERSION is the NuGet package version stamped into the platform-specific
+// project file. Defaults to TLS_CLIENT_VERSION when not set so existing CI runs
+// (which only set TLS_CLIENT_VERSION) keep working unchanged.
+const packageVersion = process.env.PACKAGE_VERSION || tlsVersion;
 const tlsClientRegex = new RegExp(`tls-client-(.*)-(.*)-${tlsVersion}\\.(.*)`);
 
 // Set up paths
@@ -111,6 +115,7 @@ async function processLibraries() {
         os: lib.os,
         arch: lib.arch,
         version: tlsVersion,
+        packageVersion: packageVersion,
         ext: lib.ext,
         runtimeIdentifier: lib.runtimeIdentifier,
       };

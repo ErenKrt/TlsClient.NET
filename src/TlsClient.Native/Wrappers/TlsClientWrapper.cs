@@ -24,6 +24,19 @@ namespace TlsClient.Native.Wrappers
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate IntPtr DestroyAllDelegate();
 
+        // Streaming exports (added in tls-client v1.11.2-stream)
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate IntPtr RequestStreamDelegate(byte[] payload);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate IntPtr ReadStreamDelegate(byte[] payload);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate IntPtr ReadStreamAllDelegate(byte[] payload);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate IntPtr CancelStreamDelegate(byte[] payload);
+
         private static bool _isInitialized;
 
         private static IntPtr _module;
@@ -33,6 +46,12 @@ namespace TlsClient.Native.Wrappers
         private static AddCookiesToSessionDelegate _addCookiesToSessionDelegate = null!;
         private static DestroySessionDelegate _destroySessionDelegate = null!;
         private static DestroyAllDelegate _destroyAllDelegate = null!;
+        // Nullable: may remain null after Initialize when the loaded native library predates
+        // the streaming exports. RequireStreamingDelegate enforces non-null on first use.
+        private static RequestStreamDelegate? _requestStreamDelegate;
+        private static ReadStreamDelegate? _readStreamDelegate;
+        private static ReadStreamAllDelegate? _readStreamAllDelegate;
+        private static CancelStreamDelegate? _cancelStreamDelegate;
 
         public static void Initialize(string? libraryPath = null)
         {
@@ -52,6 +71,13 @@ namespace TlsClient.Native.Wrappers
             _destroySessionDelegate = GetDelegate<DestroySessionDelegate>("destroySession");
             _destroyAllDelegate = GetDelegate<DestroyAllDelegate>("destroyAll");
 
+            // Streaming exports — optional. Older native libraries don't expose these,
+            // so the lookup is allowed to fail silently. The streaming wrapper methods
+            // re-check and throw a clearer error when actually invoked.
+            _requestStreamDelegate = TryGetDelegate<RequestStreamDelegate>("requestStream");
+            _readStreamDelegate = TryGetDelegate<ReadStreamDelegate>("readStream");
+            _readStreamAllDelegate = TryGetDelegate<ReadStreamAllDelegate>("readStreamAll");
+            _cancelStreamDelegate = TryGetDelegate<CancelStreamDelegate>("cancelStream");
 
             _isInitialized = true;
         }
@@ -70,6 +96,25 @@ namespace TlsClient.Native.Wrappers
                 throw new EntryPointNotFoundException($"Failed to get address of native function '{functionName}'.");
 
             return Marshal.GetDelegateForFunctionPointer<T>(functionPtr);
+        }
+
+        private static T? TryGetDelegate<T>(string functionName) where T : Delegate
+        {
+            var functionPtr = NativeLoader.GetProcAddress(_module, functionName);
+            if (functionPtr == IntPtr.Zero)
+                return null;
+
+            return Marshal.GetDelegateForFunctionPointer<T>(functionPtr);
+        }
+
+        private static T RequireStreamingDelegate<T>(T? del, string functionName) where T : Delegate
+        {
+            if (del is null)
+                throw new EntryPointNotFoundException(
+                    $"Native function '{functionName}' is not exported by the loaded tls-client library. " +
+                    "Streaming requires a native library built with the streaming exports (requestStream, " +
+                    "readStream, readStreamAll, cancelStream). Update your native library.");
+            return del;
         }
 
         private static string ExecuteNative(Func<IntPtr> nativeCall)
@@ -123,6 +168,56 @@ namespace TlsClient.Native.Wrappers
             EnsureInitialized();
             return ExecuteNative(() => _destroyAllDelegate());
         }
+
+        public static string RequestStream(byte[] payload)
+        {
+            EnsureInitialized();
+            if (payload is null) throw new ArgumentNullException(nameof(payload));
+            var del = RequireStreamingDelegate(_requestStreamDelegate, "requestStream");
+            return ExecuteNative(() => del(payload));
+        }
+
+        public static string ReadStream(byte[] payload)
+        {
+            EnsureInitialized();
+            if (payload is null) throw new ArgumentNullException(nameof(payload));
+            var del = RequireStreamingDelegate(_readStreamDelegate, "readStream");
+            return ExecuteNative(() => del(payload));
+        }
+
+        public static string ReadStreamAll(byte[] payload)
+        {
+            EnsureInitialized();
+            if (payload is null) throw new ArgumentNullException(nameof(payload));
+            var del = RequireStreamingDelegate(_readStreamAllDelegate, "readStreamAll");
+            return ExecuteNative(() => del(payload));
+        }
+
+        public static string CancelStream(byte[] payload)
+        {
+            EnsureInitialized();
+            if (payload is null) throw new ArgumentNullException(nameof(payload));
+            var del = RequireStreamingDelegate(_cancelStreamDelegate, "cancelStream");
+            return ExecuteNative(() => del(payload));
+        }
+
+        /// <summary>
+        /// True when the loaded native library exposes the streaming exports
+        /// (<c>requestStream</c>, <c>readStream</c>, <c>readStreamAll</c>, <c>cancelStream</c>).
+        /// Older builds of the tls-client library may not expose these, in which case the streaming
+        /// methods on <see cref="TlsClient.Native.NativeTlsClient"/> will throw on first use.
+        /// </summary>
+        public static bool IsStreamingSupported
+        {
+            get
+            {
+                EnsureInitialized();
+                return _requestStreamDelegate != null
+                    && _readStreamDelegate != null
+                    && _readStreamAllDelegate != null
+                    && _cancelStreamDelegate != null;
+            }
+        }
         public static void Destroy()
         {
             if (!_isInitialized)
@@ -146,6 +241,10 @@ namespace TlsClient.Native.Wrappers
                 _addCookiesToSessionDelegate = null!;
                 _destroySessionDelegate = null!;
                 _destroyAllDelegate = null!;
+                _requestStreamDelegate = null;
+                _readStreamDelegate = null;
+                _readStreamAllDelegate = null;
+                _cancelStreamDelegate = null;
 
                 _module = IntPtr.Zero;
 

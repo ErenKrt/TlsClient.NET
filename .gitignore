@@ -362,3 +362,22 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /src/TlsClient.Core/runtimes/win-x64/native/tls-client-latest.dll
+
+# TlsClient.NET — generated artifacts that must never be committed:
+#   src/native/TlsClient.Native.{os}-{arch}/  — platform package directories
+#                                                rendered from src/native/template/
+#                                                by build/native-builder/prepare.js
+#   build/temp/                                — staging directory for native DLLs
+#                                                downloaded by the prepare-libraries
+#                                                pipeline before they are placed into
+#                                                the rendered platform packages
+#   local-nuget/                               — output of local `dotnet pack` runs
+#                                                used to consume the wrapper from
+#                                                another solution as a local feed
+#   /runtimes/                                 — ad-hoc DLL staging at the repo root
+#                                                (e.g. for NativeLoader.GetLibraryPath()
+#                                                default lookup during local debugging)
+/src/native/TlsClient.Native.*/
+/build/temp/
+/local-nuget/
+/runtimes/

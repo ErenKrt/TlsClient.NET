@@ -5,8 +5,8 @@
 		<Nullable>enable</Nullable>
 		<Title>TlsClient.Native</Title>
 		<Authors>ErenKrt</Authors>
+		<Version>1.1.0-stream.1</Version>
 		<PackageProjectUrl>https://github.com/ErenKrt/TlsClient.NET</PackageProjectUrl>
-		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Description>TlsClient.Native is a .NET Standard library that provides direct/native bindings to the TlsClient Go library.</Description>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
