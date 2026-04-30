@@ -19,7 +19,7 @@ namespace TlsClient.Core
             Options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
-        protected BaseTlsClient(): this(new TlsClientOptions(TlsClientIdentifier.Chrome132, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 OPR/117.0.0.0")){}
+        protected BaseTlsClient(): this(new TlsClientOptions(TlsClientIdentifier.Chrome133, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 OPR/118.0.0.0")){}
 
         public abstract Response Request(Request request);
         public abstract GetCookiesFromSessionResponse GetCookies(string url);

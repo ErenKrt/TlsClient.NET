@@ -21,7 +21,6 @@
         public static readonly TlsClientIdentifier Chrome124 = new TlsClientIdentifier("chrome_124");
         public static readonly TlsClientIdentifier Chrome130Psk = new TlsClientIdentifier("chrome_130_PSK");
         public static readonly TlsClientIdentifier Chrome131 = new TlsClientIdentifier("chrome_131");
-        public static readonly TlsClientIdentifier Chrome132 = new TlsClientIdentifier("chrome_132");
         public static readonly TlsClientIdentifier Chrome131Psk = new TlsClientIdentifier("chrome_131_PSK");
         public static readonly TlsClientIdentifier Chrome133 = new TlsClientIdentifier("chrome_133");
         public static readonly TlsClientIdentifier Chrome133Psk = new TlsClientIdentifier("chrome_133_PSK");
