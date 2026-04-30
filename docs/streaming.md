@@ -54,7 +54,10 @@ using var client = new NativeTlsClient(new TlsClientOptions(
     TlsClientIdentifier.Chrome133,
     "Mozilla/5.0 ... Chrome/133")
 {
-    Timeout = TimeSpan.Zero, // ⚠️ streaming requires no client-wide timeout
+    // ⚠️ A negative duration disables the native http.Client.Timeout entirely.
+    // Required for long-lived SSE streams. TimeSpan.Zero does NOT work — it
+    // is treated as "use the 30 s default" by the native side.
+    Timeout = System.Threading.Timeout.InfiniteTimeSpan,
 });
 
 var start = client.RequestStream(new Request
@@ -163,7 +166,7 @@ streaming API fits that model:
 | ---- | ----- | ------ |
 | `Request.StreamOutputBlockSize` | per request | Per-Read buffer size on the Go side. Defaults to **4096 bytes**. SSE rarely benefits from making it smaller; large binary streams may benefit from `64 * 1024`. |
 | `ReadStream(streamId, timeoutMs)` | per call | How often the read loop wakes up to check cancellation. Typical: **250–1000 ms**. |
-| `Request.TimeoutMilliseconds` / `TlsClientOptions.Timeout` | per client/request | ⚠️ **Set to zero for streaming.** Go's `http.Client.Timeout` covers the entire request *including* body reads, so a 30s timeout will tear down a long-lived SSE stream. |
+| `Request.TimeoutMilliseconds` / `TlsClientOptions.Timeout` | per client/request | ⚠️ **Set to `Timeout.InfiniteTimeSpan` (or any negative duration) for long-lived streams.** Go's `http.Client.Timeout` covers the entire request *including* body reads, so a 30 s timeout will tear down a long-lived SSE stream. `TimeSpan.Zero` / `TimeoutMilliseconds = 0` is treated as "use the 30 s default" — only a negative value disables the deadline. |
 
 ---
 
@@ -206,6 +209,6 @@ Extends `Response` with one extra field: `Guid StreamId`. `Body` is always empty
 | Symptom                                      | Likely cause                                                                                  |
 | -------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | `EntryPointNotFoundException: requestStream` | The loaded native library predates the streaming exports. Use a v1.11.2-stream or later DLL. |
-| Stream ends after exactly 30 s               | `TlsClientOptions.Timeout` / `Request.TimeoutMilliseconds` is non-zero. Set it to `0`.       |
+| Stream ends after exactly 30 s               | The native side enforces its default 30 s deadline. Set `TlsClientOptions.Timeout = Timeout.InfiniteTimeSpan` (or `Request.TimeoutMilliseconds = -1`) to disable it. Note: `TimeSpan.Zero` / `0` is interpreted as "use the default", not "no timeout". |
 | Endless `Timeout=true` heartbeats            | The remote side hasn't flushed any bytes yet. Verify the endpoint actually streams.           |
 | `Error: unknown streamId`                    | You called `ReadStream` after `EOF` / `Error` / `CancelStream`. Stop the loop on those.       |

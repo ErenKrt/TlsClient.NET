@@ -67,7 +67,25 @@ namespace TlsClient.Core.Models.Requests
         public string RequestUrl { get; set; } = string.Empty;
         public List<string>? HeaderOrder { get; set; } = new List<string>();
         public List<TlsClientCookie>? RequestCookies { get; set; } = null;
+        /// <summary>
+        /// Per-request timeout in milliseconds. Takes precedence over
+        /// <see cref="TimeoutSeconds"/> when both are set. Semantics:
+        /// <list type="bullet">
+        /// <item><description><c>null</c> or <c>0</c> — fall through to the native default (30 s).</description></item>
+        /// <item><description><c>&gt; 0</c> — explicit deadline applied to the whole request, including body reads.</description></item>
+        /// <item><description><c>&lt; 0</c> — disables the deadline entirely. Required for long-lived SSE / streaming responses.</description></item>
+        /// </list>
+        /// When forwarded from <see cref="Entities.TlsClientOptions.Timeout"/>,
+        /// <see cref="System.Threading.Timeout.InfiniteTimeSpan"/> serializes to <c>-1</c> here.
+        /// </summary>
         public int? TimeoutMilliseconds { get; set; } = null;
+
+        /// <summary>
+        /// Per-request timeout in seconds. Yields to <see cref="TimeoutMilliseconds"/>
+        /// when both are non-zero. Same three-way semantics as
+        /// <see cref="TimeoutMilliseconds"/>: null/0 = native default, positive = deadline,
+        /// negative = disabled.
+        /// </summary>
         public int? TimeoutSeconds { get; set; } = null;
         public bool? CatchPanics { get; set; } = null;
         public bool? FollowRedirects { get; set; } = null;

@@ -104,10 +104,14 @@ namespace TlsClient.Native
         /// <see cref="CancelStream"/> calls.
         /// </summary>
         /// <remarks>
-        /// For server-sent events (Content-Type: text/event-stream) you must set
-        /// <see cref="Request.TimeoutMilliseconds"/> to <c>0</c> (or a deliberately large value).
-        /// The <see cref="Core.Models.Entities.TlsClientOptions.Timeout"/> bound applies to the
-        /// whole request including body reads.
+        /// For long-lived streaming responses (server-sent events, NDJSON, etc.)
+        /// you must disable the native side's deadline by setting
+        /// <see cref="Core.Models.Entities.TlsClientOptions.Timeout"/> to
+        /// <see cref="System.Threading.Timeout.InfiniteTimeSpan"/> — or by setting
+        /// <see cref="Request.TimeoutMilliseconds"/> / <see cref="Request.TimeoutSeconds"/>
+        /// to a negative value. <see cref="Core.Models.Entities.TlsClientOptions.Timeout"/>
+        /// applies to the whole request including body reads, and the value <c>0</c>
+        /// is interpreted as "use the 30 s default", not "no timeout".
         /// </remarks>
         public StreamStartResponse RequestStream(Request request)
         {
