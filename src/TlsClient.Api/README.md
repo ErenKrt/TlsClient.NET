@@ -44,7 +44,7 @@ using TlsClient.Core.Models.Requests;
 
 var options = new ApiTlsClientOptions(
     TlsClientIdentifier.Chrome133,
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 OPR/117.0.0.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 OPR/118.0.0.0",
     new Uri("http://127.0.0.1:8080"),
     "my-auth-key-1"
 );

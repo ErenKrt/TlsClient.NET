@@ -27,7 +27,7 @@ namespace TlsClient.Api
             HttpClient.DefaultRequestHeaders.Add("x-api-key", options.ApiKey);
         }
 
-        public ApiTlsClient(Uri apiBaseUri, string apiKey) : this(new ApiTlsClientOptions(TlsClientIdentifier.Chrome133, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 OPR/117.0.0.0", apiBaseUri, apiKey)){   }
+        public ApiTlsClient(Uri apiBaseUri, string apiKey) : this(new ApiTlsClientOptions(TlsClientIdentifier.Chrome133, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 OPR/118.0.0.0", apiBaseUri, apiKey)){   }
 
         #region Sync Methods
         public override Response Request(Request request) => AsyncHelpers.RunSync(() => RequestAsync(request, CancellationToken.None));

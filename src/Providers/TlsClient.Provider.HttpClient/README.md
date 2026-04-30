@@ -31,7 +31,7 @@ TlsClient.Initialize("{LIBRARY_PATH}");
 
 // create a TlsClient instance
 var tlsClient = new TlsClientBuilder()
-    .WithIdentifier(TlsClientIdentifier.Chrome132)
+    .WithIdentifier(TlsClientIdentifier.Chrome133)
     .WithUserAgent("TestClient 1.0")
     .Build();
 
