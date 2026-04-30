@@ -16,7 +16,7 @@ namespace TlsClient.RestSharp.Tests
     {
         static StatusTests()
         {
-            NativeTlsClient.Initialize("D:\\Tools\\tls-client-windows-64-1.13.1.dll");
+            NativeTlsClient.Initialize(NativeTestSetup.DllPath);
         }
 
         [Fact]
