@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using TlsClient.Core.Models.Entities;
@@ -84,18 +86,23 @@ namespace TlsClient.Core.Tests
         [Fact]
         public void Should_Override_Host()
         {
-            var baseHost = "httpbin.org";
-            var realIp = "http://35.169.229.34";
+            // Connect to the literal IP so DNS does not produce the Host header
+            // for us — that's what makes this an actual test of RequestHostOverride.
+            // Resolve the IP at runtime so the test self-heals when the upstream
+            // CDN / load balancer rotates addresses.
+            const string baseHost = "httpbin.org";
+            var ip = Dns.GetHostAddresses(baseHost)
+                .First(a => a.AddressFamily == AddressFamily.InterNetwork);
 
             using var tlsClient = new NativeTlsClient();
             var request = new Request()
             {
-                RequestUrl = realIp,
-                RequestHostOverride= baseHost,
-                InsecureSkipVerify= true
+                RequestUrl = $"http://{ip}",
+                RequestHostOverride = baseHost,
+                InsecureSkipVerify = true,
             };
             var response = tlsClient.Request(request);
-            Assert.Contains($"httpbin", response.Body);
+            Assert.Contains("httpbin", response.Body);
         }
     }
 }
