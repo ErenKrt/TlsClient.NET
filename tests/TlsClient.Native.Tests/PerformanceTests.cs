@@ -17,7 +17,7 @@ namespace TlsClient.Core.Tests
     {
         static PerformanceTests()
         {
-            NativeTlsClient.Initialize("D:\\Tools\\tls-client-windows-64-1.13.1.dll");
+            NativeTlsClient.Initialize(NativeTestSetup.DllPath);
         }
 
         [Fact]
@@ -36,7 +36,7 @@ namespace TlsClient.Core.Tests
                 {
                     using var tlsClient = new NativeTlsClient(new TlsClientOptions
                     {
-                        TlsClientIdentifier = TlsClientIdentifier.Chrome132,
+                        TlsClientIdentifier = TlsClientIdentifier.Chrome133,
                         Timeout = TimeSpan.FromSeconds(10)
                     });
 
@@ -80,7 +80,7 @@ namespace TlsClient.Core.Tests
                 {
                     using var tlsClient = new NativeTlsClient(new TlsClientOptions
                     {
-                        TlsClientIdentifier = TlsClientIdentifier.Chrome132,
+                        TlsClientIdentifier = TlsClientIdentifier.Chrome133,
                         Timeout = TimeSpan.FromSeconds(10)
                     });
 

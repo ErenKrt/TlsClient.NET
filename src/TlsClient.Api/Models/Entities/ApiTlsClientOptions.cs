@@ -8,7 +8,7 @@ namespace TlsClient.Api.Models.Entities
         public Uri ApiBaseUri { get; internal set; }
         public string ApiKey { get; internal set; }
 
-        public ApiTlsClientOptions(Uri apiBaseUri, string apiKey) : base(TlsClientIdentifier.Chrome133, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36 OPR/117.0.0.0")
+        public ApiTlsClientOptions(Uri apiBaseUri, string apiKey) : base(TlsClientIdentifier.Chrome133, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 OPR/118.0.0.0")
         {
             ApiBaseUri = ValidateBaseUri(apiBaseUri, nameof(apiBaseUri));
             ApiKey = ValidateApiKey(apiKey, nameof(apiKey));

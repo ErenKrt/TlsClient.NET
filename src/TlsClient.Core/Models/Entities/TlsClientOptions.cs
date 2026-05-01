@@ -12,6 +12,16 @@ namespace TlsClient.Core.Models.Entities
         public TlsClientIdentifier? TlsClientIdentifier { get; set; } = null;
         public string? ProxyURL { get; set; }
         public bool IsRotatingProxy { get; set; } = false;
+        /// <summary>
+        /// Per-request timeout applied to the whole HTTP exchange — including
+        /// body reads — by the underlying native client. Forwarded to the
+        /// native side as <see cref="Requests.Request.TimeoutMilliseconds"/>.
+        /// <list type="bullet">
+        /// <item><description>Default: 60 s.</description></item>
+        /// <item><description><see cref="TimeSpan.Zero"/> — interpreted by the native side as "use the 30 s default", NOT "no timeout".</description></item>
+        /// <item><description><see cref="System.Threading.Timeout.InfiniteTimeSpan"/> (or any negative duration) — disables the deadline. Required for long-lived SSE / NDJSON / streaming responses, otherwise the connection will be torn down at the deadline.</description></item>
+        /// </list>
+        /// </summary>
         public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(60);
         public string? ServerNameOverwrite { get; set; }
         public bool FollowRedirects { get; set; } = false;

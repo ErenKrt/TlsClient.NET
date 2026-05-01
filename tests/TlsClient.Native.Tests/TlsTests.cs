@@ -15,7 +15,7 @@ namespace TlsClient.Core.Tests
     {
         static TlsTests()
         {
-            NativeTlsClient.Initialize("D:\\Tools\\tls-client-windows-64-1.13.1.dll");
+            NativeTlsClient.Initialize(NativeTestSetup.DllPath);
         }
 
         [Fact]
@@ -37,7 +37,7 @@ namespace TlsClient.Core.Tests
             using var tlsClient = new NativeTlsClient(new TlsClientOptions()
             {
                 InsecureSkipVerify = true,
-                TlsClientIdentifier = TlsClientIdentifier.Chrome132,
+                TlsClientIdentifier = TlsClientIdentifier.Chrome133,
             });
             var request = new Request()
             {
@@ -53,7 +53,7 @@ namespace TlsClient.Core.Tests
             using var tlsClient = new NativeTlsClient(new TlsClientOptions()
             {
                 ForceHttp1 = true,
-                TlsClientIdentifier = TlsClientIdentifier.Chrome132,
+                TlsClientIdentifier = TlsClientIdentifier.Chrome133,
             });
             var request = new Request()
             {
@@ -69,7 +69,7 @@ namespace TlsClient.Core.Tests
         {
             using var tlsClient = new NativeTlsClient(new TlsClientOptions()
             {
-                TlsClientIdentifier = TlsClientIdentifier.Chrome132,
+                TlsClientIdentifier = TlsClientIdentifier.Chrome133,
             });
             var request = new Request()
             {

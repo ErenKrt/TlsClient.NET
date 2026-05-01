@@ -113,6 +113,17 @@ Console.WriteLine(res.Status);
 
 ---
 
+## 🔀 Streaming Responses
+
+`TlsClient.Native` supports consuming streaming responses (Server-Sent Events,
+NDJSON, chunked bodies) without buffering the whole body — through a
+`RequestStream` / `ReadStream` / `CancelStream` API on `NativeTlsClient`.
+
+See [docs/streaming.md](./docs/streaming.md) for the full guide, including SSE
+examples, `Content-Type`-based branching, tuning knobs, and limitations.
+
+---
+
 ## 🧯 Support & Issues
 
 * Wrapper/packaging issues → open an issue **here**.

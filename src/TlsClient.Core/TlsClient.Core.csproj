@@ -2,6 +2,10 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<Nullable>enable</Nullable>
+		<Version>1.2.0-stream.1</Version>
+		<Authors>ErenKrt</Authors>
+		<PackageProjectUrl>https://github.com/ErenKrt/TlsClient.NET</PackageProjectUrl>
+		<Description>Shared models and helpers for TlsClient.NET.</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -10,7 +10,7 @@ namespace TlsClient.Core.Tests
         public static readonly string BaseURL = "https://httpbin.io";
         static StatusTests()
         {
-            NativeTlsClient.Initialize("D:\\Tools\\tls-client-windows-64-1.13.1.dll");
+            NativeTlsClient.Initialize(NativeTestSetup.DllPath);
         }
 
         [Fact]

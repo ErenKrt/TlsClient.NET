@@ -2,9 +2,9 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
         <IncludeBuildOutput>false</IncludeBuildOutput>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Title>{title}</Title>
         <Authors>ErenKrt</Authors>
+        <Version>{packageVersion}</Version>
         <PackageProjectUrl>https://github.com/ErenKrt/TlsClient.NET</PackageProjectUrl>
         <Description>Native client of TLSClient for {os} {arch}</Description>
     </PropertyGroup>
