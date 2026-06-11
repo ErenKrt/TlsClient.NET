@@ -3,6 +3,8 @@
     // Reference: https://github.com/bogdanfinn/tls-client/blob/master/profiles/profiles.go
     public sealed class TlsClientIdentifier
     {
+        public static TlsClientIdentifier Default => Chrome146;
+
         #region Chrome Profiles
         public static readonly TlsClientIdentifier Chrome103 = new TlsClientIdentifier("chrome_103");
         public static readonly TlsClientIdentifier Chrome104 = new TlsClientIdentifier("chrome_104");
@@ -21,12 +23,18 @@
         public static readonly TlsClientIdentifier Chrome124 = new TlsClientIdentifier("chrome_124");
         public static readonly TlsClientIdentifier Chrome130Psk = new TlsClientIdentifier("chrome_130_PSK");
         public static readonly TlsClientIdentifier Chrome131 = new TlsClientIdentifier("chrome_131");
-        public static readonly TlsClientIdentifier Chrome132 = new TlsClientIdentifier("chrome_132");
         public static readonly TlsClientIdentifier Chrome131Psk = new TlsClientIdentifier("chrome_131_PSK");
         public static readonly TlsClientIdentifier Chrome133 = new TlsClientIdentifier("chrome_133");
         public static readonly TlsClientIdentifier Chrome133Psk = new TlsClientIdentifier("chrome_133_PSK");
         public static readonly TlsClientIdentifier Chrome144 = new TlsClientIdentifier("chrome_144");
         public static readonly TlsClientIdentifier Chrome144Psk = new TlsClientIdentifier("chrome_144_PSK");
+        public static readonly TlsClientIdentifier Chrome146 = new TlsClientIdentifier("chrome_146");
+        public static readonly TlsClientIdentifier Chrome146Psk = new TlsClientIdentifier("chrome_146_PSK");
+        #endregion
+
+        #region Brave Profiles
+        public static readonly TlsClientIdentifier Brave146 = new TlsClientIdentifier("brave_146");
+        public static readonly TlsClientIdentifier Brave146Psk = new TlsClientIdentifier("brave_146_PSK");
         #endregion
 
         #region Safari Profiles
@@ -39,6 +47,7 @@
         public static readonly TlsClientIdentifier SafariIos170 = new TlsClientIdentifier("safari_ios_17_0");
         public static readonly TlsClientIdentifier SafariIos180 = new TlsClientIdentifier("safari_ios_18_0");
         public static readonly TlsClientIdentifier SafariIos185 = new TlsClientIdentifier("safari_ios_18_5");
+        public static readonly TlsClientIdentifier SafariIos260 = new TlsClientIdentifier("safari_ios_26_0");
         #endregion
 
         #region Firefox Profiles
@@ -57,6 +66,7 @@
         public static readonly TlsClientIdentifier Firefox146Psk = new TlsClientIdentifier("firefox_146_PSK");
         public static readonly TlsClientIdentifier Firefox147 = new TlsClientIdentifier("firefox_147");
         public static readonly TlsClientIdentifier Firefox147Psk = new TlsClientIdentifier("firefox_147_PSK");
+        public static readonly TlsClientIdentifier Firefox148Psk = new TlsClientIdentifier("firefox_148_PSK");
         #endregion
 
         #region Opera Profiles

@@ -18,7 +18,7 @@ namespace TlsClient.Api.Tests
         [Fact]
         public void Should_Include_Cookie()
         {
-            using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:8080"), "my-auth-key-1");
+            using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:5666"), "my-auth-key-1");
             tlsClient.Options.WithCustomCookieJar = true;
 
             var request = new Request()
@@ -37,7 +37,7 @@ namespace TlsClient.Api.Tests
         [Fact]
         public void Should_Keep_Cookie()
         {
-            using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:8080"), "my-auth-key-1");
+            using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:5666"), "my-auth-key-1");
             var request = new Request()
             {
                 RequestUrl = BaseURL + "/cookies/set?sessionid=123456",
@@ -57,7 +57,7 @@ namespace TlsClient.Api.Tests
         [Fact]
         public void Should_Not_Keep_Cookie_By_Request()
         {
-            using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:8080"), "my-auth-key-1");
+            using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:5666"), "my-auth-key-1");
             var request = new Request()
             {
                 RequestUrl = BaseURL + "/cookies/set?sessionid=123456",
@@ -77,7 +77,7 @@ namespace TlsClient.Api.Tests
         [Fact]
         public void Should_Not_Keep_Cookie_By_Client()
         {
-            using var tlsClient = new ApiTlsClient(new ApiTlsClientOptions(new Uri("http://127.0.0.1:8080"), "my-auth-key-1")
+            using var tlsClient = new ApiTlsClient(new ApiTlsClientOptions(new Uri("http://127.0.0.1:5666"), "my-auth-key-1")
             {
                 TlsClientIdentifier= TlsClientIdentifier.Chrome133,
                 WithoutCookieJar = true
@@ -99,7 +99,7 @@ namespace TlsClient.Api.Tests
         [Fact]
         public void Should_Include_Cookie_By_Header()
         {
-            using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:8080"), "my-auth-key-1");
+            using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:5666"), "my-auth-key-1");
             tlsClient.DefaultHeaders.Add("Cookie", new List<string> { "sessionid=123456" });
 
             var request = new Request()
@@ -114,7 +114,7 @@ namespace TlsClient.Api.Tests
         [Fact]
         public void Should_Get_Cookie()
         {
-            using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:8080"), "my-auth-key-1");
+            using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:5666"), "my-auth-key-1");
 
             var request = new Request()
             {

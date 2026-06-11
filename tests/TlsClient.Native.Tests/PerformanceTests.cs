@@ -36,7 +36,7 @@ namespace TlsClient.Core.Tests
                 {
                     using var tlsClient = new NativeTlsClient(new TlsClientOptions
                     {
-                        TlsClientIdentifier = TlsClientIdentifier.Chrome132,
+                        TlsClientIdentifier = TlsClientIdentifier.Chrome146,
                         Timeout = TimeSpan.FromSeconds(10)
                     });
 
@@ -80,7 +80,7 @@ namespace TlsClient.Core.Tests
                 {
                     using var tlsClient = new NativeTlsClient(new TlsClientOptions
                     {
-                        TlsClientIdentifier = TlsClientIdentifier.Chrome132,
+                        TlsClientIdentifier = TlsClientIdentifier.Chrome146,
                         Timeout = TimeSpan.FromSeconds(10)
                     });
 

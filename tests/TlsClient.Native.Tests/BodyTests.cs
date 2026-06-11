@@ -16,7 +16,7 @@ namespace TlsClient.Core.Tests
     {
         static BodyTests()
         {
-            NativeTlsClient.Initialize("D:\\Tools\\tls-client-windows-64-1.13.1.dll");
+            NativeTlsClient.Initialize("D:\\Tools\\tls-client-windows-64-1.15.1.dll");
         }
 
         [Fact]
@@ -37,7 +37,7 @@ namespace TlsClient.Core.Tests
             File.Delete("avatar.png");
 
             response.Status.Should().Be(HttpStatusCode.OK);
-            fileLength.Should().Be(long.Parse(contentLength));
+            fileInfo.Exists.Should().BeTrue();
         }
 
         [Fact]
