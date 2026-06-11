@@ -37,7 +37,7 @@ namespace TlsClient.Core.Tests
             using var tlsClient = new NativeTlsClient(new TlsClientOptions()
             {
                 InsecureSkipVerify = true,
-                TlsClientIdentifier = TlsClientIdentifier.Chrome132,
+                TlsClientIdentifier = TlsClientIdentifier.Chrome146,
             });
             var request = new Request()
             {
@@ -53,7 +53,7 @@ namespace TlsClient.Core.Tests
             using var tlsClient = new NativeTlsClient(new TlsClientOptions()
             {
                 ForceHttp1 = true,
-                TlsClientIdentifier = TlsClientIdentifier.Chrome132,
+                TlsClientIdentifier = TlsClientIdentifier.Chrome146,
             });
             var request = new Request()
             {
@@ -69,7 +69,7 @@ namespace TlsClient.Core.Tests
         {
             using var tlsClient = new NativeTlsClient(new TlsClientOptions()
             {
-                TlsClientIdentifier = TlsClientIdentifier.Chrome132,
+                TlsClientIdentifier = TlsClientIdentifier.Chrome146,
             });
             var request = new Request()
             {

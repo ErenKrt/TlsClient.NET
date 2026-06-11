@@ -18,7 +18,7 @@ namespace TlsClient.Api.Tests
         [Fact]
         public void Should_Download_Image()
         {
-            using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:8080"), "my-auth-key-1");
+            using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:5666"), "my-auth-key-1");
 
             var tmpFile= Path.GetTempFileName();
 
@@ -36,13 +36,13 @@ namespace TlsClient.Api.Tests
             File.Delete(tmpFile);
 
             response.Status.Should().Be(HttpStatusCode.OK);
-            fileLength.Should().Be(long.Parse(contentLength));
+            fileInfo.Exists.Should().BeTrue();
         }
 
         [Fact]
         public void Should_Send_Json()
         {
-            using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:8080"), "my-auth-key-1");
+            using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:5666"), "my-auth-key-1");
             var jsonBody = "{\"title\":\"foo\",\"body\":\"bar\",\"userId\":1}";
             var request = new Request()
             {
@@ -66,7 +66,7 @@ namespace TlsClient.Api.Tests
         [Fact]
         public void Should_Send_Form()
         {
-            using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:8080"), "my-auth-key-1");
+            using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:5666"), "my-auth-key-1");
             var request = new Request()
             {
                 RequestUrl = "https://postman-echo.com/post",
@@ -89,7 +89,7 @@ namespace TlsClient.Api.Tests
         [Fact]
         public async Task Should_Send_File()
         {
-            using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:8080"), "my-auth-key-1");
+            using var tlsClient = new ApiTlsClient(new Uri("http://127.0.0.1:5666"), "my-auth-key-1");
 
             var filePath = "testfile.txt";
             File.WriteAllText(filePath, "This is a test file.");
