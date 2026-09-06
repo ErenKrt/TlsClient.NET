@@ -13,156 +13,212 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-    - name: Install dependencies
-      run: |
-        pwd
-        sudo apt-get update
-        sudo apt-get install -y jq gh tree
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq gh tree
 
-    - name: Get latest release info
-      id: get_latest
-      run: |
-        RELEASE_JSON=$(curl -s https://api.github.com/repos/bogdanfinn/tls-client/releases/latest)
-        TAG_NAME=$(echo "$RELEASE_JSON" | jq -r '.tag_name')
-        echo "Latest tag: $TAG_NAME"
-        echo "LATEST_TAG=$TAG_NAME" >> $GITHUB_ENV
+      - name: Get latest release info
+        run: |
+          set -euo pipefail
 
-    - name: Check if new version
-      id: check_version
-      run: |
-        if [ -f "./tls-client-version.txt" ]; then
-          LAST_VERSION=$(cat ./tls-client-version.txt)
-        else
-          LAST_VERSION=""
-        fi
+          RELEASE_JSON=$(curl -fsSL \
+            https://api.github.com/repos/bogdanfinn/tls-client/releases/latest)
 
-        echo "Last processed version: $LAST_VERSION"
+          TAG_NAME=$(echo "$RELEASE_JSON" | jq -r '.tag_name')
 
-        if [ "$LAST_VERSION" = "${{ env.LATEST_TAG }}" ]; then
-          echo "Already up to date. Exiting."
-          echo "SHOULD_CONTINUE=false" >> $GITHUB_ENV
-        else
-          echo "New version found: ${{ env.LATEST_TAG }}"
-          echo "SHOULD_CONTINUE=true" >> $GITHUB_ENV
-        fi
+          if [ -z "$TAG_NAME" ] || [ "$TAG_NAME" = "null" ]; then
+            echo "Could not determine latest tls-client release."
+            exit 1
+          fi
 
-    - name: Download tls-client libraries
-      if: env.SHOULD_CONTINUE == 'true'
-      run: |
-        # Create temp directory for downloads
-        mkdir -p build/temp
+          echo "Latest tag: $TAG_NAME"
+          echo "LATEST_TAG=$TAG_NAME" >> "$GITHUB_ENV"
 
-        # Use the already fetched latest release info
-        echo "Downloading assets from latest release: ${{ env.LATEST_TAG }}"
+          VERSION="${TAG_NAME#v}"
+          echo "TLS_CLIENT_VERSION=$VERSION" >> "$GITHUB_ENV"
 
-        # Get assets for the latest release using GitHub CLI
-        assets=$(gh release view ${{ env.LATEST_TAG }} --repo bogdanfinn/tls-client --json assets -q '.assets[].name' | grep -v "xgo")
+      - name: Check if new version
+        run: |
+          set -euo pipefail
 
-        for asset in $assets; do
-          echo "Downloading $asset..."
-
-          # Download the asset directly using GitHub CLI
-          gh release download ${{ env.LATEST_TAG }} --repo bogdanfinn/tls-client --pattern "$asset" --dir build/temp
-
-          if [ $? -eq 0 ]; then
-            echo "Downloaded $asset successfully"
+          if [ -f "./tls-client-version.txt" ]; then
+            LAST_VERSION=$(tr -d '\r\n' < ./tls-client-version.txt)
           else
-            echo "Failed to download $asset"
-          fi
-        done
-
-        # List downloaded files
-        echo "Downloaded files in build/temp:"
-        ls -la build/temp/
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Update version file
-      if: env.SHOULD_CONTINUE == 'true'
-      run: |
-        echo "${{ env.LATEST_TAG }}" > tls-client-version.txt
-        echo "Updated version file to ${{ env.LATEST_TAG }}"
-
-    - name: Setup Node.js
-      if: env.SHOULD_CONTINUE == 'true'
-      uses: actions/setup-node@v4.4.0
-      with:
-        node-version: 'latest'
-
-    - name: Run native-builder script
-      if: env.SHOULD_CONTINUE == 'true'
-      run: |
-        # Pass the version to the Node.js script via environment variable
-        export TLS_CLIENT_VERSION="${{ env.LATEST_TAG }}"
-
-        # Run the prepare script
-        cd build/native-builder
-        npm install
-        npm run prepare-libraries
-
-        echo "Native libraries preparation completed"
-
-        # Return to root directory
-        cd ../..
-
-        # Remove template directory after projects are generated
-        rm -rf src/native/template
-
-    - name: Setup .NET
-      if: env.SHOULD_CONTINUE == 'true'
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
-
-    - name: Pack and publish native projects to NuGet
-      if: env.SHOULD_CONTINUE == 'true'
-      run: |
-        # Extract version number from LATEST_TAG (remove 'v' prefix)
-        VERSION="${{ env.LATEST_TAG }}"
-        if [[ "$VERSION" == v* ]]; then
-          VERSION="${VERSION#v}"
-        fi
-
-        echo "Using version: $VERSION for all native packages"
-
-        # Create output directory
-        mkdir -p packages
-
-        # Find all .csproj files in native directories
-        for project in src/native/TlsClient.Native.*/*.csproj; do
-          echo "Packing project: $project"
-
-          # Pack the project with the extracted version
-          dotnet pack "$project" -c Release -p:Version=$VERSION --output packages
-
-          if [ $? -ne 0 ]; then
-            echo "Warning: Packaging failed for $project"
-            continue
+            LAST_VERSION=""
           fi
 
-          # Get the package name from the project file name
-          package_name=$(basename "$project" .csproj)
-          package_path="packages/$package_name.$VERSION.nupkg"
+          echo "Last processed version: $LAST_VERSION"
+          echo "Latest version: $LATEST_TAG"
 
-          if [ -f "$package_path" ]; then
-            # Push to NuGet
-            echo "Publishing package: $package_path"
-            dotnet nuget push "$package_path" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+          if [ "$LAST_VERSION" = "$LATEST_TAG" ]; then
+            echo "Already up to date."
+            echo "SHOULD_CONTINUE=false" >> "$GITHUB_ENV"
           else
-            echo "Warning: Package not found at $package_path"
+            echo "New version found: $LATEST_TAG"
+            echo "SHOULD_CONTINUE=true" >> "$GITHUB_ENV"
           fi
-        done
-      env:
-        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
 
-    - name: Commit and push changes
-      if: env.SHOULD_CONTINUE == 'true'
-      run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-        git add tls-client-version.txt
-        git commit -m "Update tls-client version to ${{ env.LATEST_TAG }}"
-        git push
+      - name: Download tls-client XGO libraries
+        if: env.SHOULD_CONTINUE == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          rm -rf build/temp
+          mkdir -p build/temp
+
+          echo "Downloading tls-client XGO assets"
+          echo "Tag: $LATEST_TAG"
+          echo "Version: $TLS_CLIENT_VERSION"
+
+          assets=$(gh release view "$LATEST_TAG" \
+            --repo bogdanfinn/tls-client \
+            --json assets \
+            --jq '.assets[].name' \
+            | grep "^tls-client-xgo-${TLS_CLIENT_VERSION}-" || true)
+
+          if [ -z "$assets" ]; then
+            echo "No XGO assets found for $LATEST_TAG"
+            exit 1
+          fi
+
+          echo ""
+          echo "Found XGO assets:"
+          echo "$assets"
+          echo ""
+
+          while IFS= read -r asset; do
+            [ -z "$asset" ] && continue
+
+            echo "Downloading: $asset"
+
+            gh release download "$LATEST_TAG" \
+              --repo bogdanfinn/tls-client \
+              --pattern "$asset" \
+              --dir build/temp
+          done <<< "$assets"
+
+          echo ""
+          echo "Downloaded files:"
+          tree build/temp
+
+      - name: Setup Node.js
+        if: env.SHOULD_CONTINUE == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run native-builder script
+        if: env.SHOULD_CONTINUE == 'true'
+        run: |
+          set -euo pipefail
+
+          echo "Preparing tls-client $TLS_CLIENT_VERSION libraries"
+
+          cd build/native-builder
+
+          npm install
+          npm run prepare-libraries
+
+          cd ../..
+
+          echo ""
+          echo "Generated native projects:"
+          tree src/native
+
+          # Template is only needed for generation.
+          rm -rf src/native/template
+
+      - name: Setup .NET
+        if: env.SHOULD_CONTINUE == 'true'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Pack native projects
+        if: env.SHOULD_CONTINUE == 'true'
+        run: |
+          set -euo pipefail
+
+          VERSION="$TLS_CLIENT_VERSION"
+
+          echo "Packing native packages with version: $VERSION"
+
+          rm -rf packages
+          mkdir -p packages
+
+          shopt -s nullglob
+          projects=(src/native/TlsClient.Native.*/*.csproj)
+
+          if [ ${#projects[@]} -eq 0 ]; then
+            echo "No native projects found."
+            exit 1
+          fi
+
+          for project in "${projects[@]}"; do
+            echo ""
+            echo "Packing: $project"
+
+            dotnet pack "$project" \
+              -c Release \
+              -p:Version="$VERSION" \
+              --output packages
+          done
+
+          echo ""
+          echo "Created NuGet packages:"
+          ls -lah packages/
+
+      - name: Publish native projects to NuGet
+        if: env.SHOULD_CONTINUE == 'true'
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          shopt -s nullglob
+          packages=(packages/*.nupkg)
+
+          if [ ${#packages[@]} -eq 0 ]; then
+            echo "No NuGet packages found."
+            exit 1
+          fi
+
+          for package in "${packages[@]}"; do
+            echo ""
+            echo "Publishing: $package"
+
+            dotnet nuget push "$package" \
+              --api-key "$NUGET_API_KEY" \
+              --source https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+          done
+
+      - name: Update version file
+        if: env.SHOULD_CONTINUE == 'true'
+        run: |
+          echo "$LATEST_TAG" > tls-client-version.txt
+          echo "Updated version file to $LATEST_TAG"
+
+      - name: Commit and push changes
+        if: env.SHOULD_CONTINUE == 'true'
+        run: |
+          set -euo pipefail
+
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          git add tls-client-version.txt
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Update tls-client version to $LATEST_TAG"
+          git push
