@@ -19,6 +19,7 @@ namespace TlsClient.Core.Models.Entities
         public bool DisableIPV4 { get; set; } = false;
         public bool DisableIPV6 { get; set; } = false;
         public bool DisableHttp3 { get; set; } = false;
+        public bool DisableSessionTickets { get; set; } = false;
         public bool WithProtocolRacing {  get; set; } = false;
         public bool WithDebug { get; set; } = false;
         public bool WithCustomCookieJar { get; set; } = false;

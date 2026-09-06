@@ -3,7 +3,7 @@
     // Reference: https://github.com/bogdanfinn/tls-client/blob/master/profiles/profiles.go
     public sealed class TlsClientIdentifier
     {
-        public static TlsClientIdentifier Default => Chrome146;
+        public static TlsClientIdentifier Default => Chrome150;
 
         #region Chrome Profiles
         public static readonly TlsClientIdentifier Chrome103 = new TlsClientIdentifier("chrome_103");
@@ -30,6 +30,10 @@
         public static readonly TlsClientIdentifier Chrome144Psk = new TlsClientIdentifier("chrome_144_PSK");
         public static readonly TlsClientIdentifier Chrome146 = new TlsClientIdentifier("chrome_146");
         public static readonly TlsClientIdentifier Chrome146Psk = new TlsClientIdentifier("chrome_146_PSK");
+        public static readonly TlsClientIdentifier Chrome150 = new TlsClientIdentifier("chrome_150");
+        public static readonly TlsClientIdentifier Chrome150Psk = new TlsClientIdentifier("chrome_150_PSK");
+        public static readonly TlsClientIdentifier Chrome152 = new TlsClientIdentifier("chrome_152");
+        public static readonly TlsClientIdentifier Chrome152Psk = new TlsClientIdentifier("chrome_152_PSK");
         #endregion
 
         #region Brave Profiles

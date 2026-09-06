@@ -67,6 +67,7 @@ namespace TlsClient.Core
             request.HeaderOrder ??= Options.HeaderOrder;
             request.ConnectHeaders ??= Options.ConnectHeaders;
             request.DisableHttp3 ??= Options.DisableHttp3;
+            request.DisableSessionTickets ??= Options.DisableSessionTickets;
             request.WithProtocolRacing ??= Options.WithProtocolRacing;
             request.EuckrResponse ??= Options.EuckrResponse;
             request.ServerNameOverwrite ??= Options.ServerNameOverwrite;

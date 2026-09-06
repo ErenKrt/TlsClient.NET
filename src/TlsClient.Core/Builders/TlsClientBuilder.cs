@@ -155,6 +155,12 @@ namespace TlsClient.Core.Builders
             return this;
         }
 
+        public TlsClientBuilder WithDisableSessionTickets(bool enabled = true)
+        {
+            _options.DisableSessionTickets = enabled;
+            return this;
+        }
+
         public TlsClientBuilder WithRandomTLSExtensionOrder(bool enabled = true)
         {
             _options.WithRandomTLSExtensionOrder = enabled;

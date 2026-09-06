@@ -46,6 +46,7 @@ namespace TlsClient.Core.Models.Requests
         public bool? DisableIPV6 { get; set; } = null;
         public bool? DisableIPV4 { get; set; } = null;
         public bool? DisableHttp3 { get; set; } = null;
+        public bool? DisableSessionTickets { get; set; } = null;
         public bool? WithDebug { get; set; } = null;
         /* if is true creates cookie jar from tls-client-api, can be use withDebug */
         public bool? WithCustomCookieJar { get; set; } = null;

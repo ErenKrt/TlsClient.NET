@@ -12,6 +12,7 @@ namespace TlsClient.Core.Models.Entities
         public PriorityParam? HeaderPriority { get; set; }
         public List<string> CertCompressionAlgos { get; set; } = new List<string>();
         public string Ja3String { get; set; } = string.Empty;
+        public string TrustAnchorsPayload { get; set; } = string.Empty;
         public List<string> H2SettingsOrder { get; set; } = new List<string>();
         public List<string> KeyShareCurves { get; set; } = new List<string>();
         public List<string> ALPNProtocols { get; set; } = new List<string>();

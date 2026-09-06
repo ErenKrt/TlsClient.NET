@@ -89,6 +89,12 @@ namespace TlsClient.Core.Builders
             return this;
         }
 
+        public RequestBuilder WithDisableSessionTickets(bool enabled = true)
+        {
+            _request.DisableSessionTickets = enabled;
+            return this;
+        }
+
         public Request Build() => _request;
     }
 }
